@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34511.84
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Balanzas_MF", "Balanzas_MF\Balanzas_MF.csproj", "{79DE6E58-2101-4588-AC21-4CD1B9378270}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{79DE6E58-2101-4588-AC21-4CD1B9378270}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79DE6E58-2101-4588-AC21-4CD1B9378270}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79DE6E58-2101-4588-AC21-4CD1B9378270}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79DE6E58-2101-4588-AC21-4CD1B9378270}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {345E58DA-5727-47ED-9883-D21843482BD4}
+	EndGlobalSection
+EndGlobal
