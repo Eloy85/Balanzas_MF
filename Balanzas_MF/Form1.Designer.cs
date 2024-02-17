@@ -32,6 +32,11 @@
             this.btn_load_sales = new System.Windows.Forms.Button();
             this.btn_load_errors = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.label_bal5 = new System.Windows.Forms.Label();
+            this.label_bal4 = new System.Windows.Forms.Label();
+            this.label_bal3 = new System.Windows.Forms.Label();
+            this.label_bal2 = new System.Windows.Forms.Label();
+            this.label_bal1 = new System.Windows.Forms.Label();
             this.btn_load_bal5 = new System.Windows.Forms.Button();
             this.btn_load_bal4 = new System.Windows.Forms.Button();
             this.btn_load_bal3 = new System.Windows.Forms.Button();
@@ -43,11 +48,6 @@
             this.btn_print_report = new System.Windows.Forms.Button();
             this.label_sales = new System.Windows.Forms.Label();
             this.label_errors = new System.Windows.Forms.Label();
-            this.label_bal1 = new System.Windows.Forms.Label();
-            this.label_bal2 = new System.Windows.Forms.Label();
-            this.label_bal3 = new System.Windows.Forms.Label();
-            this.label_bal4 = new System.Windows.Forms.Label();
-            this.label_bal5 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
@@ -56,7 +56,7 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(312, 40);
+            this.label1.Location = new System.Drawing.Point(307, 40);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(190, 25);
             this.label1.TabIndex = 0;
@@ -64,7 +64,7 @@
             // 
             // btn_load_sales
             // 
-            this.btn_load_sales.Location = new System.Drawing.Point(114, 88);
+            this.btn_load_sales.Location = new System.Drawing.Point(202, 88);
             this.btn_load_sales.Name = "btn_load_sales";
             this.btn_load_sales.Size = new System.Drawing.Size(127, 23);
             this.btn_load_sales.TabIndex = 1;
@@ -74,7 +74,7 @@
             // 
             // btn_load_errors
             // 
-            this.btn_load_errors.Location = new System.Drawing.Point(569, 88);
+            this.btn_load_errors.Location = new System.Drawing.Point(483, 88);
             this.btn_load_errors.Name = "btn_load_errors";
             this.btn_load_errors.Size = new System.Drawing.Size(101, 23);
             this.btn_load_errors.TabIndex = 2;
@@ -101,9 +101,59 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Cargar ventas Qendra";
             // 
+            // label_bal5
+            // 
+            this.label_bal5.AutoSize = true;
+            this.label_bal5.ForeColor = System.Drawing.Color.ForestGreen;
+            this.label_bal5.Location = new System.Drawing.Point(490, 61);
+            this.label_bal5.Name = "label_bal5";
+            this.label_bal5.Size = new System.Drawing.Size(47, 13);
+            this.label_bal5.TabIndex = 14;
+            this.label_bal5.Text = "Cargado";
+            // 
+            // label_bal4
+            // 
+            this.label_bal4.AutoSize = true;
+            this.label_bal4.ForeColor = System.Drawing.Color.ForestGreen;
+            this.label_bal4.Location = new System.Drawing.Point(375, 61);
+            this.label_bal4.Name = "label_bal4";
+            this.label_bal4.Size = new System.Drawing.Size(47, 13);
+            this.label_bal4.TabIndex = 13;
+            this.label_bal4.Text = "Cargado";
+            // 
+            // label_bal3
+            // 
+            this.label_bal3.AutoSize = true;
+            this.label_bal3.ForeColor = System.Drawing.Color.ForestGreen;
+            this.label_bal3.Location = new System.Drawing.Point(259, 61);
+            this.label_bal3.Name = "label_bal3";
+            this.label_bal3.Size = new System.Drawing.Size(47, 13);
+            this.label_bal3.TabIndex = 12;
+            this.label_bal3.Text = "Cargado";
+            // 
+            // label_bal2
+            // 
+            this.label_bal2.AutoSize = true;
+            this.label_bal2.ForeColor = System.Drawing.Color.ForestGreen;
+            this.label_bal2.Location = new System.Drawing.Point(140, 61);
+            this.label_bal2.Name = "label_bal2";
+            this.label_bal2.Size = new System.Drawing.Size(47, 13);
+            this.label_bal2.TabIndex = 11;
+            this.label_bal2.Text = "Cargado";
+            // 
+            // label_bal1
+            // 
+            this.label_bal1.AutoSize = true;
+            this.label_bal1.ForeColor = System.Drawing.Color.ForestGreen;
+            this.label_bal1.Location = new System.Drawing.Point(22, 61);
+            this.label_bal1.Name = "label_bal1";
+            this.label_bal1.Size = new System.Drawing.Size(47, 13);
+            this.label_bal1.TabIndex = 10;
+            this.label_bal1.Text = "Cargado";
+            // 
             // btn_load_bal5
             // 
-            this.btn_load_bal5.Location = new System.Drawing.Point(476, 30);
+            this.btn_load_bal5.Location = new System.Drawing.Point(476, 35);
             this.btn_load_bal5.Name = "btn_load_bal5";
             this.btn_load_bal5.Size = new System.Drawing.Size(75, 23);
             this.btn_load_bal5.TabIndex = 4;
@@ -113,7 +163,7 @@
             // 
             // btn_load_bal4
             // 
-            this.btn_load_bal4.Location = new System.Drawing.Point(360, 30);
+            this.btn_load_bal4.Location = new System.Drawing.Point(360, 35);
             this.btn_load_bal4.Name = "btn_load_bal4";
             this.btn_load_bal4.Size = new System.Drawing.Size(75, 23);
             this.btn_load_bal4.TabIndex = 3;
@@ -123,7 +173,7 @@
             // 
             // btn_load_bal3
             // 
-            this.btn_load_bal3.Location = new System.Drawing.Point(244, 30);
+            this.btn_load_bal3.Location = new System.Drawing.Point(244, 35);
             this.btn_load_bal3.Name = "btn_load_bal3";
             this.btn_load_bal3.Size = new System.Drawing.Size(75, 23);
             this.btn_load_bal3.TabIndex = 2;
@@ -133,7 +183,7 @@
             // 
             // btn_load_bal2
             // 
-            this.btn_load_bal2.Location = new System.Drawing.Point(125, 30);
+            this.btn_load_bal2.Location = new System.Drawing.Point(125, 35);
             this.btn_load_bal2.Name = "btn_load_bal2";
             this.btn_load_bal2.Size = new System.Drawing.Size(75, 23);
             this.btn_load_bal2.TabIndex = 1;
@@ -143,7 +193,7 @@
             // 
             // btn_load_bal1
             // 
-            this.btn_load_bal1.Location = new System.Drawing.Point(7, 30);
+            this.btn_load_bal1.Location = new System.Drawing.Point(7, 35);
             this.btn_load_bal1.Name = "btn_load_bal1";
             this.btn_load_bal1.Size = new System.Drawing.Size(75, 23);
             this.btn_load_bal1.TabIndex = 0;
@@ -195,7 +245,7 @@
             // 
             this.label_sales.AutoSize = true;
             this.label_sales.ForeColor = System.Drawing.Color.ForestGreen;
-            this.label_sales.Location = new System.Drawing.Point(153, 114);
+            this.label_sales.Location = new System.Drawing.Point(241, 114);
             this.label_sales.Name = "label_sales";
             this.label_sales.Size = new System.Drawing.Size(47, 13);
             this.label_sales.TabIndex = 8;
@@ -205,61 +255,11 @@
             // 
             this.label_errors.AutoSize = true;
             this.label_errors.ForeColor = System.Drawing.Color.ForestGreen;
-            this.label_errors.Location = new System.Drawing.Point(598, 114);
+            this.label_errors.Location = new System.Drawing.Point(512, 114);
             this.label_errors.Name = "label_errors";
             this.label_errors.Size = new System.Drawing.Size(47, 13);
             this.label_errors.TabIndex = 9;
             this.label_errors.Text = "Cargado";
-            // 
-            // label_bal1
-            // 
-            this.label_bal1.AutoSize = true;
-            this.label_bal1.ForeColor = System.Drawing.Color.ForestGreen;
-            this.label_bal1.Location = new System.Drawing.Point(22, 56);
-            this.label_bal1.Name = "label_bal1";
-            this.label_bal1.Size = new System.Drawing.Size(47, 13);
-            this.label_bal1.TabIndex = 10;
-            this.label_bal1.Text = "Cargado";
-            // 
-            // label_bal2
-            // 
-            this.label_bal2.AutoSize = true;
-            this.label_bal2.ForeColor = System.Drawing.Color.ForestGreen;
-            this.label_bal2.Location = new System.Drawing.Point(140, 56);
-            this.label_bal2.Name = "label_bal2";
-            this.label_bal2.Size = new System.Drawing.Size(47, 13);
-            this.label_bal2.TabIndex = 11;
-            this.label_bal2.Text = "Cargado";
-            // 
-            // label_bal3
-            // 
-            this.label_bal3.AutoSize = true;
-            this.label_bal3.ForeColor = System.Drawing.Color.ForestGreen;
-            this.label_bal3.Location = new System.Drawing.Point(259, 56);
-            this.label_bal3.Name = "label_bal3";
-            this.label_bal3.Size = new System.Drawing.Size(47, 13);
-            this.label_bal3.TabIndex = 12;
-            this.label_bal3.Text = "Cargado";
-            // 
-            // label_bal4
-            // 
-            this.label_bal4.AutoSize = true;
-            this.label_bal4.ForeColor = System.Drawing.Color.ForestGreen;
-            this.label_bal4.Location = new System.Drawing.Point(375, 56);
-            this.label_bal4.Name = "label_bal4";
-            this.label_bal4.Size = new System.Drawing.Size(47, 13);
-            this.label_bal4.TabIndex = 13;
-            this.label_bal4.Text = "Cargado";
-            // 
-            // label_bal5
-            // 
-            this.label_bal5.AutoSize = true;
-            this.label_bal5.ForeColor = System.Drawing.Color.ForestGreen;
-            this.label_bal5.Location = new System.Drawing.Point(490, 56);
-            this.label_bal5.Name = "label_bal5";
-            this.label_bal5.Size = new System.Drawing.Size(47, 13);
-            this.label_bal5.TabIndex = 14;
-            this.label_bal5.Text = "Cargado";
             // 
             // Form1
             // 

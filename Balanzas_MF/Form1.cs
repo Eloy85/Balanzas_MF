@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Printing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -27,6 +28,7 @@ namespace Balanzas_MF
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            this.CenterToScreen();
             label_sales.Text = "";
             label_errors.Text = "";
             label_bal1.Text = "";
@@ -85,6 +87,24 @@ namespace Balanzas_MF
                     return;
                 }
 
+                // Buscar la columna "Producto" en la misma fila que "c_Producto"
+                int descripcionColumnIndex = -1;
+                for (int col = productoColumnIndex + 1; col <= colCount; col++)
+                {
+                    string header = worksheet.Cells[productoRowIndex, col].Value?.ToString();
+                    if (header == "Producto")
+                    {
+                        descripcionColumnIndex = col;
+                        break;
+                    }
+                }
+
+                if (descripcionColumnIndex == -1)
+                {
+                    MessageBox.Show("No se encontró la columna 'Producto' en la fila de 'c_Producto'.");
+                    return;
+                }
+
                 // Buscar la columna "SubTotal" en la misma fila que "c_Producto"
                 int subtotalColumnIndex = -1;
                 for (int col = productoColumnIndex + 1; col <= colCount; col++)
@@ -107,6 +127,7 @@ namespace Balanzas_MF
                 salesDataTable.Clear();
                 salesDataTable.Columns.Clear();
                 salesDataTable.Columns.Add("c_Producto");
+                salesDataTable.Columns.Add("Producto");
                 salesDataTable.Columns.Add("SubTotal");
 
                 // Iterar sobre las filas para obtener los datos
@@ -114,6 +135,7 @@ namespace Balanzas_MF
                 {
                     DataRow newRow = salesDataTable.Rows.Add();
                     newRow["c_Producto"] = worksheet.Cells[row, productoColumnIndex].Value?.ToString();
+                    newRow["Producto"] = worksheet.Cells[row, descripcionColumnIndex].Value?.ToString();
                     newRow["SubTotal"] = worksheet.Cells[row, subtotalColumnIndex].Value?.ToString();
                 }
             }
@@ -262,12 +284,13 @@ namespace Balanzas_MF
                         if (parts.Length >= 2)
                         {
                             string codigo = parts[0];
-                            string subtotal = parts[parts.Length - 1].Replace("$", "");
+                            
 
                             // Verificar si el código es numérico antes de agregar la fila
                             int codigoInt;
-                            if (int.TryParse(codigo, out codigoInt))
+                            if (!string.IsNullOrEmpty(codigo) && int.TryParse(codigo, out codigoInt) && codigoInt >= 100)
                             {
+                                string subtotal = parts[parts.Length - 1].Replace("$", "");
                                 DataRow newRow = balDataTable.Rows.Add();
                                 newRow["CODIGO"] = codigo;
                                 newRow["SUBTOTAL"] = subtotal;
@@ -298,20 +321,25 @@ namespace Balanzas_MF
                 foreach (DataRow row in balDataTable.Rows)
                 {
                     string codigo = row["CODIGO"].ToString();
-                    decimal subtotal = Convert.ToDecimal(row["SUBTOTAL"]);
 
-                    // Buscar si el código ya existe en la tabla de resultados
-                    DataRow existingRow = resultTable.AsEnumerable().FirstOrDefault(r => r.Field<string>("codigo") == codigo);
+                    // Verificar si el código no está vacío
+                    if (!string.IsNullOrEmpty(codigo))
+                    {
+                        decimal subtotal = Convert.ToDecimal(row["SUBTOTAL"]);
 
-                    if (existingRow != null)
-                    {
-                        // Si el código ya existe, sumar el subtotal a las ventas_qendra existentes
-                        existingRow["ventas_qendra"] = Convert.ToDecimal(existingRow["ventas_qendra"]) + subtotal;
-                    }
-                    else
-                    {
-                        // Si el código no existe, agregar una nueva fila
-                        resultTable.Rows.Add(codigo, null, subtotal, 0, 0, 0);
+                        // Buscar si el código ya existe en la tabla de resultados
+                        DataRow existingRow = resultTable.AsEnumerable().FirstOrDefault(r => r.Field<string>("codigo") == codigo);
+
+                        if (existingRow != null)
+                        {
+                            // Si el código ya existe, sumar el subtotal a las ventas_qendra existentes
+                            existingRow["ventas_qendra"] = Convert.ToDecimal(existingRow["ventas_qendra"]) + subtotal;
+                        }
+                        else
+                        {
+                            // Si el código no existe, agregar una nueva fila
+                            resultTable.Rows.Add(codigo, null, subtotal, 0, 0, 0);
+                        }
                     }
                 }
             }
@@ -320,31 +348,36 @@ namespace Balanzas_MF
             foreach (DataRow row in errorsDataTable.Rows)
             {
                 string codigo = row["Código"].ToString();
-                decimal errorAmount;
 
-                // Verificar si el valor en la columna "Monto" es DBNull antes de convertirlo a decimal
-                if (row["Monto"] != DBNull.Value)
+                // Verificar si el código no está vacío
+                if (!string.IsNullOrEmpty(codigo))
                 {
-                    errorAmount = Convert.ToDecimal(row["Monto"]);
-                }
-                else
-                {
-                    // Asignar un valor predeterminado, por ejemplo, 0
-                    errorAmount = 0;
-                }
+                    decimal errorAmount;
 
-                // Buscar si el código ya existe en la tabla de resultados
-                DataRow existingRow = resultTable.AsEnumerable().FirstOrDefault(r => r.Field<string>("codigo") == codigo);
+                    // Verificar si el valor en la columna "Monto" es DBNull antes de convertirlo a decimal
+                    if (row["Monto"] != DBNull.Value)
+                    {
+                        errorAmount = Convert.ToDecimal(row["Monto"]);
+                    }
+                    else
+                    {
+                        // Asignar un valor predeterminado, por ejemplo, 0
+                        errorAmount = 0;
+                    }
 
-                if (existingRow != null)
-                {
-                    // Si el código ya existe, agregar el monto de error
-                    existingRow["errores_qendra"] = errorAmount;
-                }
-                else
-                {
-                    // Si el código no existe, agregar una nueva fila
-                    resultTable.Rows.Add(codigo, null, 0, errorAmount, 0, 0);
+                    // Buscar si el código ya existe en la tabla de resultados
+                    DataRow existingRow = resultTable.AsEnumerable().FirstOrDefault(r => r.Field<string>("codigo") == codigo);
+
+                    if (existingRow != null)
+                    {
+                        // Si el código ya existe, agregar el monto de error
+                        existingRow["errores_qendra"] = errorAmount;
+                    }
+                    else
+                    {
+                        // Si el código no existe, agregar una nueva fila
+                        resultTable.Rows.Add(codigo, null, 0, errorAmount, 0, 0);
+                    }
                 }
             }
 
@@ -352,20 +385,27 @@ namespace Balanzas_MF
             foreach (DataRow row in salesDataTable.Rows)
             {
                 string codigo = row["c_Producto"].ToString();
-                decimal subtotal = Convert.ToDecimal(row["SubTotal"]);
 
-                // Buscar si el código ya existe en la tabla de resultados
-                DataRow existingRow = resultTable.AsEnumerable().FirstOrDefault(r => r.Field<string>("codigo") == codigo);
+                // Verificar si el código no está vacío
+                if (!string.IsNullOrEmpty(codigo))
+                {
+                    string producto = row["Producto"].ToString();
+                    decimal subtotal = Convert.ToDecimal(row["SubTotal"]);
 
-                if (existingRow != null)
-                {
-                    // Si el código ya existe, agregar el subtotal de ventas_ultranet
-                    existingRow["ventas_ultranet"] = subtotal;
-                }
-                else
-                {
-                    // Si el código no existe, agregar una nueva fila
-                    resultTable.Rows.Add(codigo, null, 0, 0, subtotal, 0);
+                    // Buscar si el código ya existe en la tabla de resultados
+                    DataRow existingRow = resultTable.AsEnumerable().FirstOrDefault(r => r.Field<string>("codigo") == codigo);
+
+                    if (existingRow != null)
+                    {
+                        // Si el código ya existe, agregar la descripción y el subtotal de ventas_ultranet
+                        existingRow["producto"] = producto;
+                        existingRow["ventas_ultranet"] = subtotal;
+                    }
+                    /*else
+                    {
+                        // Si el código no existe, agregar una nueva fila
+                        resultTable.Rows.Add(codigo, producto, 0, 0, subtotal, 0);
+                    }*/
                 }
             }
 
@@ -389,8 +429,10 @@ namespace Balanzas_MF
             dataGridView1.Columns["errores_qendra"].HeaderText = "Errores Qendra";
             dataGridView1.Columns["ventas_ultranet"].HeaderText = "Ventas UltraNet";
             dataGridView1.Columns["total"].HeaderText = "Total";
-        }
 
+            // Ordenar tabla por código
+            OrdenarDataGridView1("codigo");
+        }
 
         private void btn_clean_fields_Click(object sender, EventArgs e)
         {
@@ -416,9 +458,61 @@ namespace Balanzas_MF
             label_bal5.Text = "";
         }
 
+        private void OrdenarDataGridView1(string columnName)
+        {
+            // Verifica si hay datos en el dataGridView1
+            if (dataGridView1.DataSource is DataTable dataTable)
+            {
+                // Ordena el DataTable por la columna 2
+                dataTable.DefaultView.Sort = columnName + " ASC";
+
+                // Vuelve a asignar la fuente de datos al DataGridView
+                dataGridView1.DataSource = dataTable;
+            }
+        }
+
         private void btn_print_report_Click(object sender, EventArgs e)
         {
+            try
+            {
+                // Verificar si hay datos en dataGridView2
+                if (dataGridView1.Rows.Count > 0)
+                {
+                    PrintDocument pd = new PrintDocument();
 
+                    // Asocia el evento de impresión
+                    pd.PrintPage += new PrintPageEventHandler(PrintDocument_PrintPage);
+
+                    // Configura el tamaño del papel
+                    pd.DefaultPageSettings.PaperSize = new PaperSize("A4", 210, 297); // Ancho x Alto en cien milésimas de pulgada
+
+                    // Muestra el cuadro de diálogo de impresión
+                    PrintDialog printDialog = new PrintDialog();
+                    printDialog.Document = pd;
+
+                    if (printDialog.ShowDialog() == DialogResult.OK)
+                    {
+                        pd.Print();
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("No hay datos para imprimir en el informe.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+            catch (System.ComponentModel.Win32Exception win32Ex)
+            {
+                MessageBox.Show($"Error al imprimir: {win32Ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Otro error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void PrintDocument_PrintPage(object sender, PrintPageEventArgs e)
+        {
+            Font fuente = new Font("Arial", 10, FontStyle.Regular);
         }
     }
 }

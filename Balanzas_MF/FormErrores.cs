@@ -24,11 +24,15 @@ namespace Balanzas_MF
             dataGridViewErrors.Columns.Add("Code", "Código");
             dataGridViewErrors.Columns.Add("Amount", "Monto");
 
+            num_code.Enter += NumericUpDown_Enter;
+            num_code.KeyDown += NumericUpDown_KeyDown;
+            num_amount.KeyDown += NumericUpDown_KeyDown;
+            dataGridViewErrors.KeyPress += dataGridViewErrors_KeyPress;
         }
 
         private void FormErrores_Load(object sender, EventArgs e)
         {
-
+            this.CenterToScreen();
         }
 
         private void btn_add_error_Click(object sender, EventArgs e)
@@ -72,6 +76,47 @@ namespace Balanzas_MF
         {
             // Cerrar FormErrores
             this.Close();
+        }
+
+        private void NumericUpDown_Enter(object sender, EventArgs e)
+        {
+            num_code.Select(0, num_code.Text.Length);
+        }
+
+        private void NumericUpDown_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                if (num_code.Focused)
+                {
+                    num_amount.Focus();
+                    num_amount.Select(0, num_amount.Text.Length);
+                }
+                else if (num_amount.Focused)
+                {
+                    btn_add_error_Click(sender, e);
+                    num_code.Focus();
+                    num_code.Select(0, num_code.Text.Length);
+                }
+            }
+
+            if (e.KeyCode == Keys.Escape)
+            {
+                // Cierra la ventana actual (CantidadForm)
+                this.Close();
+
+                // Vuelve al formulario principal (Form1)
+                Form1.ActiveForm.Focus();
+            }
+        }
+
+        private void dataGridViewErrors_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == (char)Keys.Tab)
+            {
+                e.Handled = true;
+                btn_errors_ok.Focus();
+            }
         }
     }
 }
