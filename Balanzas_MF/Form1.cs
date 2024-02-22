@@ -36,6 +36,8 @@ namespace Balanzas_MF
             label_bal3.Text = "";
             label_bal4.Text = "";
             label_bal5.Text = "";
+            label_diferencia.Text = "";
+            label_total.Text = "";
         }
 
         private void btn_load_sales_Click(object sender, EventArgs e)
@@ -315,6 +317,9 @@ namespace Balanzas_MF
             resultTable.Columns.Add("ventas_ultranet", typeof(decimal));
             resultTable.Columns.Add("total", typeof(decimal));
 
+            // Variable para almacenar la suma de los valores de la columna "total"
+            decimal totalSum = 0;
+
             // Procesar los datos de los archivos txt
             foreach (DataTable balDataTable in balDataTables)
             {
@@ -417,10 +422,15 @@ namespace Balanzas_MF
                 decimal ventas_ultranet = Convert.ToDecimal(row["ventas_ultranet"]);
                 decimal total = ventas_ultranet - ventas_qendra - errores_qendra;
                 row["total"] = total;
+
+                // Sumar el valor de "total" a la variable totalSum
+                totalSum += total;
             }
 
             // Mostrar los resultados en dataGridView1
             dataGridView1.DataSource = resultTable;
+            label_diferencia.Text = "Diferencia total:";
+            label_total.Text = "$ " + totalSum;
 
             // Cambiar los nombres de los encabezados de columna
             dataGridView1.Columns["codigo"].HeaderText = "Código";
@@ -456,6 +466,8 @@ namespace Balanzas_MF
             label_bal3.Text = "";
             label_bal4.Text = "";
             label_bal5.Text = "";
+            label_diferencia.Text = "";
+            label_total.Text = "";
         }
 
         private void OrdenarDataGridView1(string columnName)
@@ -473,46 +485,75 @@ namespace Balanzas_MF
 
         private void btn_print_report_Click(object sender, EventArgs e)
         {
+            // Crear un nuevo archivo Excel
+            ExcelPackage package = new ExcelPackage();
+            ExcelWorksheet worksheet = package.Workbook.Worksheets.Add("Reporte");
+
+            // Fusionar las celdas para el título
+            worksheet.Cells["A1:F1"].Merge = true;
+            string currentDate = DateTime.Now.ToString("yyyy-MM-dd");
+            worksheet.Cells["A1"].Value = "CONTROL DE BALANZAS AL " + currentDate;
+            worksheet.Cells["A1"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            worksheet.Cells["A1"].Style.Font.Bold = true;
+            worksheet.Cells["A1"].Style.Font.Size = 16;
+
+            // Agregar los encabezados de las columnas
+            for (int i = 0; i < dataGridView1.Columns.Count; i++)
+            {
+                worksheet.Cells[2, i + 1].Value = dataGridView1.Columns[i].HeaderText;
+                worksheet.Cells[2, i + 1].Style.Font.Bold = true;
+            }
+
+            // Agregar los datos de dataGridView1 al archivo Excel
+            for (int i = 0; i < dataGridView1.Rows.Count; i++)
+            {
+                for (int j = 0; j < dataGridView1.Columns.Count; j++)
+                {
+                    worksheet.Cells[i + 3, j + 1].Value = dataGridView1.Rows[i].Cells[j].Value;
+                    worksheet.Cells[i + 3, j + 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Left;
+                }
+            }
+
+            // Agregar la fila de "DIFERENCIA TOTAL"
+            worksheet.Cells[dataGridView1.Rows.Count + 2, 2].Value = "DIFERENCIA TOTAL";
+
+            // Calcular la suma de la columna "Total"
+            decimal totalSum = 0;
+            for (int i = 0; i < dataGridView1.Rows.Count; i++)
+            {
+                totalSum += Convert.ToDecimal(dataGridView1.Rows[i].Cells["Total"].Value);
+            }
+            worksheet.Cells[dataGridView1.Rows.Count + 2, dataGridView1.Columns.Count].Value = totalSum;
+
+            // Establecer el estilo de la fila "TOTAL" en negrita
+            worksheet.Cells[dataGridView1.Rows.Count + 2, 1, dataGridView1.Rows.Count + 2, dataGridView1.Columns.Count].Style.Font.Bold = true;
+
+            // Establecer el ancho de las columnas y el formato de las celdas
+            worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+
+            // Configurar la propiedad de impresión para ajustar todas las columnas en una página
+            worksheet.PrinterSettings.FitToPage = true;
+            worksheet.PrinterSettings.FitToWidth = 1;
+
+            // Configurar el tamaño de papel por defecto como A4
+            worksheet.PrinterSettings.PaperSize = (ePaperSize)Enum.Parse(typeof(ePaperSize), "A4");
+
+
+            // Guardar el archivo
+            string fileName = $"Reporte Balanzas {currentDate}.xlsx";
+            string filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), fileName);
+            FileInfo file = new FileInfo(filePath);
+            package.SaveAs(file);
+
+            // Abrir el archivo automáticamente
             try
             {
-                // Verificar si hay datos en dataGridView2
-                if (dataGridView1.Rows.Count > 0)
-                {
-                    PrintDocument pd = new PrintDocument();
-
-                    // Asocia el evento de impresión
-                    pd.PrintPage += new PrintPageEventHandler(PrintDocument_PrintPage);
-
-                    // Configura el tamaño del papel
-                    pd.DefaultPageSettings.PaperSize = new PaperSize("A4", 210, 297); // Ancho x Alto en cien milésimas de pulgada
-
-                    // Muestra el cuadro de diálogo de impresión
-                    PrintDialog printDialog = new PrintDialog();
-                    printDialog.Document = pd;
-
-                    if (printDialog.ShowDialog() == DialogResult.OK)
-                    {
-                        pd.Print();
-                    }
-                }
-                else
-                {
-                    MessageBox.Show("No hay datos para imprimir en el informe.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
+                System.Diagnostics.Process.Start(filePath);
             }
-            catch (System.ComponentModel.Win32Exception win32Ex)
+            catch (System.ComponentModel.Win32Exception)
             {
-                MessageBox.Show($"Error al imprimir: {win32Ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Error: No se pudo abrir el archivo.");
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Otro error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void PrintDocument_PrintPage(object sender, PrintPageEventArgs e)
-        {
-            Font fuente = new Font("Arial", 10, FontStyle.Regular);
         }
     }
 }

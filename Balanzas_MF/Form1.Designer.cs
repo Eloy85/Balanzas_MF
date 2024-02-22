@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.label1 = new System.Windows.Forms.Label();
             this.btn_load_sales = new System.Windows.Forms.Button();
             this.btn_load_errors = new System.Windows.Forms.Button();
@@ -48,6 +49,8 @@
             this.btn_print_report = new System.Windows.Forms.Button();
             this.label_sales = new System.Windows.Forms.Label();
             this.label_errors = new System.Windows.Forms.Label();
+            this.label_diferencia = new System.Windows.Forms.Label();
+            this.label_total = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
@@ -223,7 +226,7 @@
             // 
             // btn_clean_fields
             // 
-            this.btn_clean_fields.Location = new System.Drawing.Point(239, 522);
+            this.btn_clean_fields.Location = new System.Drawing.Point(239, 550);
             this.btn_clean_fields.Name = "btn_clean_fields";
             this.btn_clean_fields.Size = new System.Drawing.Size(90, 23);
             this.btn_clean_fields.TabIndex = 6;
@@ -233,11 +236,11 @@
             // 
             // btn_print_report
             // 
-            this.btn_print_report.Location = new System.Drawing.Point(461, 522);
+            this.btn_print_report.Location = new System.Drawing.Point(464, 550);
             this.btn_print_report.Name = "btn_print_report";
-            this.btn_print_report.Size = new System.Drawing.Size(88, 23);
+            this.btn_print_report.Size = new System.Drawing.Size(93, 23);
             this.btn_print_report.TabIndex = 7;
-            this.btn_print_report.Text = "Imprimir reporte";
+            this.btn_print_report.Text = "Generar reporte";
             this.btn_print_report.UseVisualStyleBackColor = true;
             this.btn_print_report.Click += new System.EventHandler(this.btn_print_report_Click);
             // 
@@ -261,11 +264,33 @@
             this.label_errors.TabIndex = 9;
             this.label_errors.Text = "Cargado";
             // 
+            // label_diferencia
+            // 
+            this.label_diferencia.AutoSize = true;
+            this.label_diferencia.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label_diferencia.Location = new System.Drawing.Point(159, 501);
+            this.label_diferencia.Name = "label_diferencia";
+            this.label_diferencia.Size = new System.Drawing.Size(116, 16);
+            this.label_diferencia.TabIndex = 10;
+            this.label_diferencia.Text = "Diferencia total:";
+            // 
+            // label_total
+            // 
+            this.label_total.AutoSize = true;
+            this.label_total.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label_total.Location = new System.Drawing.Point(547, 501);
+            this.label_total.Name = "label_total";
+            this.label_total.Size = new System.Drawing.Size(67, 16);
+            this.label_total.TabIndex = 11;
+            this.label_total.Text = "$ 100000";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 571);
+            this.ClientSize = new System.Drawing.Size(783, 616);
+            this.Controls.Add(this.label_total);
+            this.Controls.Add(this.label_diferencia);
             this.Controls.Add(this.label_errors);
             this.Controls.Add(this.label_sales);
             this.Controls.Add(this.btn_print_report);
@@ -276,8 +301,9 @@
             this.Controls.Add(this.btn_load_errors);
             this.Controls.Add(this.btn_load_sales);
             this.Controls.Add(this.label1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
-            this.Text = "Form1";
+            this.Text = "Control balanzas";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
@@ -309,6 +335,8 @@
         private System.Windows.Forms.Label label_bal1;
         private System.Windows.Forms.Label label_sales;
         private System.Windows.Forms.Label label_errors;
+        private System.Windows.Forms.Label label_diferencia;
+        private System.Windows.Forms.Label label_total;
     }
 }
 
