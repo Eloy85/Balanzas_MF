@@ -57,6 +57,7 @@
             // 
             // label1
             // 
+            this.label1.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label1.Location = new System.Drawing.Point(307, 40);
@@ -67,6 +68,7 @@
             // 
             // btn_load_sales
             // 
+            this.btn_load_sales.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.btn_load_sales.Location = new System.Drawing.Point(202, 88);
             this.btn_load_sales.Name = "btn_load_sales";
             this.btn_load_sales.Size = new System.Drawing.Size(127, 23);
@@ -77,6 +79,7 @@
             // 
             // btn_load_errors
             // 
+            this.btn_load_errors.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.btn_load_errors.Location = new System.Drawing.Point(483, 88);
             this.btn_load_errors.Name = "btn_load_errors";
             this.btn_load_errors.Size = new System.Drawing.Size(101, 23);
@@ -87,6 +90,7 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.groupBox1.Controls.Add(this.label_bal5);
             this.groupBox1.Controls.Add(this.label_bal4);
             this.groupBox1.Controls.Add(this.label_bal3);
@@ -206,15 +210,19 @@
             // 
             // dataGridView1
             // 
+            this.dataGridView1.AllowUserToAddRows = false;
+            this.dataGridView1.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.dataGridView1.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView1.Location = new System.Drawing.Point(114, 323);
             this.dataGridView1.Name = "dataGridView1";
+            this.dataGridView1.ReadOnly = true;
             this.dataGridView1.Size = new System.Drawing.Size(556, 164);
             this.dataGridView1.TabIndex = 4;
             // 
             // btn_process_data
             // 
+            this.btn_process_data.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.btn_process_data.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btn_process_data.Location = new System.Drawing.Point(358, 279);
             this.btn_process_data.Name = "btn_process_data";
@@ -226,6 +234,7 @@
             // 
             // btn_clean_fields
             // 
+            this.btn_clean_fields.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.btn_clean_fields.Location = new System.Drawing.Point(239, 550);
             this.btn_clean_fields.Name = "btn_clean_fields";
             this.btn_clean_fields.Size = new System.Drawing.Size(90, 23);
@@ -236,6 +245,7 @@
             // 
             // btn_print_report
             // 
+            this.btn_print_report.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.btn_print_report.Location = new System.Drawing.Point(464, 550);
             this.btn_print_report.Name = "btn_print_report";
             this.btn_print_report.Size = new System.Drawing.Size(93, 23);
@@ -246,6 +256,7 @@
             // 
             // label_sales
             // 
+            this.label_sales.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.label_sales.AutoSize = true;
             this.label_sales.ForeColor = System.Drawing.Color.ForestGreen;
             this.label_sales.Location = new System.Drawing.Point(241, 114);
@@ -256,6 +267,7 @@
             // 
             // label_errors
             // 
+            this.label_errors.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.label_errors.AutoSize = true;
             this.label_errors.ForeColor = System.Drawing.Color.ForestGreen;
             this.label_errors.Location = new System.Drawing.Point(512, 114);
@@ -266,6 +278,7 @@
             // 
             // label_diferencia
             // 
+            this.label_diferencia.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.label_diferencia.AutoSize = true;
             this.label_diferencia.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label_diferencia.Location = new System.Drawing.Point(159, 501);
@@ -276,6 +289,7 @@
             // 
             // label_total
             // 
+            this.label_total.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.label_total.AutoSize = true;
             this.label_total.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label_total.Location = new System.Drawing.Point(547, 501);
@@ -288,6 +302,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoSize = true;
             this.ClientSize = new System.Drawing.Size(783, 616);
             this.Controls.Add(this.label_total);
             this.Controls.Add(this.label_diferencia);
@@ -301,7 +316,9 @@
             this.Controls.Add(this.btn_load_errors);
             this.Controls.Add(this.btn_load_sales);
             this.Controls.Add(this.label1);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
             this.Name = "Form1";
             this.Text = "Control balanzas";
             this.Load += new System.EventHandler(this.Form1_Load);

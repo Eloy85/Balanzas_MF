@@ -4,9 +4,11 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Drawing.Printing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using OfficeOpenXml;
@@ -18,12 +20,15 @@ namespace Balanzas_MF
         private DataTable salesDataTable;
         private List<DataTable> balDataTables;
         private DataTable errorsDataTable = new DataTable();
+        // Define un conjunto de códigos de rubro excluidos como un campo de clase
+        private HashSet<string> excludedRubroCodes = new HashSet<string>();
 
         public Form1()
         {
             InitializeComponent();
             salesDataTable = new DataTable();
             balDataTables = new List<DataTable>();
+            dataGridView1.CellClick += dataGridView1_CellClick;
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -62,9 +67,12 @@ namespace Balanzas_MF
                 int rowCount = worksheet.Dimension.Rows;
                 int colCount = worksheet.Dimension.Columns;
 
-                // Buscar la columna "c_Producto" en cualquier fila del archivo
+                // Buscar las columnas "c_Producto", "Producto", "Sub Total" y "c_Rubro" en cualquier fila del archivo
                 int productoRowIndex = -1;
                 int productoColumnIndex = -1;
+                int descripcionColumnIndex = -1;
+                int subtotalColumnIndex = -1;
+                int rubroColumnIndex = -1;
                 for (int row = 1; row <= rowCount; row++)
                 {
                     for (int col = 1; col <= colCount; col++)
@@ -74,71 +82,88 @@ namespace Balanzas_MF
                         {
                             productoRowIndex = row;
                             productoColumnIndex = col;
-                            break;
+                        }
+                        else if (header == "Producto")
+                        {
+                            descripcionColumnIndex = col;
+                        }
+                        else if (header == "Sub Total")
+                        {
+                            subtotalColumnIndex = col;
+                        }
+                        else if (header == "c_Rubro")
+                        {
+                            rubroColumnIndex = col;
                         }
                     }
-                    if (productoRowIndex != -1)
+                    if (productoRowIndex != -1 && descripcionColumnIndex != -1 && subtotalColumnIndex != -1 && rubroColumnIndex != -1)
                     {
-                        break; // Si encontramos la columna, salimos del bucle externo
+                        break; // Si encontramos todas las columnas, salimos del bucle externo
                     }
                 }
 
-                if (productoRowIndex == -1)
+                if (productoRowIndex == -1 || descripcionColumnIndex == -1 || subtotalColumnIndex == -1 || rubroColumnIndex == -1)
                 {
-                    MessageBox.Show("No se encontró la columna 'c_Producto'.");
+                    MessageBox.Show("No se encontraron todas las columnas necesarias.");
                     return;
                 }
 
-                // Buscar la columna "Producto" en la misma fila que "c_Producto"
-                int descripcionColumnIndex = -1;
-                for (int col = productoColumnIndex + 1; col <= colCount; col++)
-                {
-                    string header = worksheet.Cells[productoRowIndex, col].Value?.ToString();
-                    if (header == "Producto")
-                    {
-                        descripcionColumnIndex = col;
-                        break;
-                    }
-                }
+                // Inicializar un diccionario para rastrear los subtotales por código de producto
+                Dictionary<string, Tuple<string, decimal>> subtotalDictionary = new Dictionary<string, Tuple<string, decimal>>();
 
-                if (descripcionColumnIndex == -1)
-                {
-                    MessageBox.Show("No se encontró la columna 'Producto' en la fila de 'c_Producto'.");
-                    return;
-                }
-
-                // Buscar la columna "SubTotal" en la misma fila que "c_Producto"
-                int subtotalColumnIndex = -1;
-                for (int col = productoColumnIndex + 1; col <= colCount; col++)
-                {
-                    string header = worksheet.Cells[productoRowIndex, col].Value?.ToString();
-                    if (header == "SubTotal")
-                    {
-                        subtotalColumnIndex = col;
-                        break;
-                    }
-                }
-
-                if (subtotalColumnIndex == -1)
-                {
-                    MessageBox.Show("No se encontró la columna 'SubTotal' en la fila de 'c_Producto'.");
-                    return;
-                }
-
-                // Leer los datos de las columnas encontradas
-                salesDataTable.Clear();
-                salesDataTable.Columns.Clear();
-                salesDataTable.Columns.Add("c_Producto");
-                salesDataTable.Columns.Add("Producto");
-                salesDataTable.Columns.Add("SubTotal");
+                // Excluir ciertos códigos de rubro
+                HashSet<string> excludedRubroCodes = new HashSet<string> { "12", "13", "14", "15", "17", "18", "19", "20", "22", "23", "24", "25", "100", "110", "111", "114" };
 
                 // Iterar sobre las filas para obtener los datos
                 for (int row = productoRowIndex + 1; row <= rowCount; row++)
                 {
+                    string codigo = worksheet.Cells[row, productoColumnIndex].Value?.ToString();
+                    string rubro = worksheet.Cells[row, rubroColumnIndex].Value?.ToString();
+
+                    // Verificar si el código de rubro está excluido
+                    if (excludedRubroCodes.Contains(rubro))
+                    {
+                        continue; // Saltar esta fila
+                    }
+
+                    string producto = worksheet.Cells[row, descripcionColumnIndex].Value?.ToString();
+                    string subtotalStr = worksheet.Cells[row, subtotalColumnIndex].Value?.ToString();
+                    decimal subtotal = 0;
+
+                    // Convertir el subtotal a decimal
+                    if (!string.IsNullOrEmpty(subtotalStr) && decimal.TryParse(subtotalStr, out decimal parsedSubtotal))
+                    {
+                        subtotal = parsedSubtotal;
+                    }
+
+                    // Verificar si ya existe un subtotal para este código de producto
+                    if (subtotalDictionary.ContainsKey(codigo))
+                    {
+                        // Si existe, sumar el subtotal actual al subtotal existente
+                        var existingData = subtotalDictionary[codigo];
+                        subtotalDictionary[codigo] = new Tuple<string, decimal>(producto, existingData.Item2 + subtotal);
+                    }
+                    else
+                    {
+                        // Si no existe, agregar el subtotal al diccionario
+                        subtotalDictionary[codigo] = new Tuple<string, decimal>(producto, subtotal);
+                    }
+                }
+
+                // Crear una tabla para almacenar los datos
+                salesDataTable.Clear();
+                salesDataTable.Columns.Clear();
+                salesDataTable.Columns.Add("c_Producto");
+                salesDataTable.Columns.Add("Producto");
+                salesDataTable.Columns.Add("Sub Total");
+
+                // Agregar los datos del diccionario a la tabla de datos
+                foreach (var pair in subtotalDictionary)
+                {
                     DataRow newRow = salesDataTable.Rows.Add();
-                    newRow["c_Producto"] = worksheet.Cells[row, productoColumnIndex].Value?.ToString();
-                    newRow["Producto"] = worksheet.Cells[row, descripcionColumnIndex].Value?.ToString();
-                    newRow["SubTotal"] = worksheet.Cells[row, subtotalColumnIndex].Value?.ToString();
+                    newRow["c_Producto"] = pair.Key;
+                    newRow["Producto"] = pair.Value.Item1;
+                    newRow["Sub Total"] = pair.Value.Item2;
                 }
             }
         }
@@ -168,14 +193,14 @@ namespace Balanzas_MF
         private void btn_load_errors_Click(object sender, EventArgs e)
         {
             FormErrores formErrores = new FormErrores(this); // Pasar una referencia de Form1 a FormErrores
-            formErrores.Show();
+            formErrores.ShowDialog();
         }
 
         private void btn_load_bal1_Click(object sender, EventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.Filter = "Archivos de texto (*.txt)|*.txt";
-            openFileDialog.Multiselect = true;
+            openFileDialog.Multiselect = false;
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
@@ -191,7 +216,7 @@ namespace Balanzas_MF
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.Filter = "Archivos de texto (*.txt)|*.txt";
-            openFileDialog.Multiselect = true;
+            openFileDialog.Multiselect = false;
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
@@ -207,7 +232,7 @@ namespace Balanzas_MF
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.Filter = "Archivos de texto (*.txt)|*.txt";
-            openFileDialog.Multiselect = true;
+            openFileDialog.Multiselect = false;
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
@@ -223,7 +248,7 @@ namespace Balanzas_MF
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.Filter = "Archivos de texto (*.txt)|*.txt";
-            openFileDialog.Multiselect = true;
+            openFileDialog.Multiselect = false;
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
@@ -239,7 +264,7 @@ namespace Balanzas_MF
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.Filter = "Archivos de texto (*.txt)|*.txt";
-            openFileDialog.Multiselect = true;
+            openFileDialog.Multiselect = false;
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
@@ -314,13 +339,20 @@ namespace Balanzas_MF
             resultTable.Columns.Add("producto");
             resultTable.Columns.Add("ventas_qendra", typeof(decimal));
             resultTable.Columns.Add("errores_qendra", typeof(decimal));
+            resultTable.Columns.Add("diferencia_qendra", typeof(decimal));
             resultTable.Columns.Add("ventas_ultranet", typeof(decimal));
             resultTable.Columns.Add("total", typeof(decimal));
+
+            // Diccionario para rastrear los montos de errores por código
+            Dictionary<string, decimal> errorAmounts = new Dictionary<string, decimal>();
 
             // Variable para almacenar la suma de los valores de la columna "total"
             decimal totalSum = 0;
 
             // Procesar los datos de los archivos txt
+
+            // Crear una instancia de CultureInfo con la cultura específica que deseas utilizar
+            CultureInfo culture = new CultureInfo("es-ES"); // En este caso, la cultura sería para los decimales con coma (,)
             foreach (DataTable balDataTable in balDataTables)
             {
                 foreach (DataRow row in balDataTable.Rows)
@@ -330,59 +362,79 @@ namespace Balanzas_MF
                     // Verificar si el código no está vacío
                     if (!string.IsNullOrEmpty(codigo))
                     {
-                        decimal subtotal = Convert.ToDecimal(row["SUBTOTAL"]);
-
-                        // Buscar si el código ya existe en la tabla de resultados
-                        DataRow existingRow = resultTable.AsEnumerable().FirstOrDefault(r => r.Field<string>("codigo") == codigo);
-
-                        if (existingRow != null)
+                        // Convertir el valor de SUBTOTAL a decimal utilizando la cultura adecuada
+                        decimal subtotal;
+                        if (decimal.TryParse(row["SUBTOTAL"].ToString(), NumberStyles.Float, culture, out subtotal))
                         {
-                            // Si el código ya existe, sumar el subtotal a las ventas_qendra existentes
-                            existingRow["ventas_qendra"] = Convert.ToDecimal(existingRow["ventas_qendra"]) + subtotal;
+                            // Buscar si el código ya existe en la tabla de resultados
+                            DataRow existingRow = resultTable.AsEnumerable().FirstOrDefault(r => r.Field<string>("codigo") == codigo);
+
+                            if (existingRow != null)
+                            {
+                                // Si el código ya existe, sumar el subtotal a las ventas_qendra existentes
+                                existingRow["ventas_qendra"] = Convert.ToDecimal(existingRow["ventas_qendra"]) + subtotal;
+                            }
+                            else
+                            {
+                                // Si el código no existe, agregar una nueva fila
+                                resultTable.Rows.Add(codigo, null, subtotal, 0, 0, 0);
+                            }
                         }
                         else
                         {
-                            // Si el código no existe, agregar una nueva fila
-                            resultTable.Rows.Add(codigo, null, subtotal, 0, 0, 0);
+                            // Manejar el caso en que la conversión falla
+                            MessageBox.Show("Error: No se pudieron leer correctamente los datos de las balanzas.");
                         }
                     }
                 }
             }
 
+
             // Procesar los errores de FormErrores
             foreach (DataRow row in errorsDataTable.Rows)
             {
                 string codigo = row["Código"].ToString();
+                decimal errorAmount;
 
-                // Verificar si el código no está vacío
-                if (!string.IsNullOrEmpty(codigo))
+                // Verificar si el valor en la columna "Monto" es DBNull antes de convertirlo a decimal
+                if (row["Monto"] != DBNull.Value)
                 {
-                    decimal errorAmount;
+                    errorAmount = Convert.ToDecimal(row["Monto"]);
+                }
+                else
+                {
+                    // Asignar un valor predeterminado, por ejemplo, 0
+                    errorAmount = 0;
+                }
 
-                    // Verificar si el valor en la columna "Monto" es DBNull antes de convertirlo a decimal
-                    if (row["Monto"] != DBNull.Value)
-                    {
-                        errorAmount = Convert.ToDecimal(row["Monto"]);
-                    }
-                    else
-                    {
-                        // Asignar un valor predeterminado, por ejemplo, 0
-                        errorAmount = 0;
-                    }
+                // Verificar si ya existe un monto para este código
+                if (errorAmounts.ContainsKey(codigo))
+                {
+                    // Si existe, sumar el monto actual al monto existente
+                    errorAmounts[codigo] += errorAmount;
+                }
+                else
+                {
+                    // Si no existe, agregar el monto al diccionario
+                    errorAmounts[codigo] = errorAmount;
+                }
+            }
 
-                    // Buscar si el código ya existe en la tabla de resultados
-                    DataRow existingRow = resultTable.AsEnumerable().FirstOrDefault(r => r.Field<string>("codigo") == codigo);
+            // Agregar los montos de errores al resultado
+            foreach (var pair in errorAmounts)
+            {
+                string codigo = pair.Key;
+                decimal errorAmount = pair.Value;
 
-                    if (existingRow != null)
-                    {
-                        // Si el código ya existe, agregar el monto de error
-                        existingRow["errores_qendra"] = errorAmount;
-                    }
-                    else
-                    {
-                        // Si el código no existe, agregar una nueva fila
-                        resultTable.Rows.Add(codigo, null, 0, errorAmount, 0, 0);
-                    }
+                DataRow existingRow = resultTable.AsEnumerable().FirstOrDefault(r => r.Field<string>("codigo") == codigo);
+                if (existingRow != null)
+                {
+                    existingRow["errores_qendra"] = errorAmount;
+                }
+                else
+                {
+                    // Si el código no existe, agregar una nueva fila
+                    resultTable.Rows.Add(codigo, null, 0, errorAmount, 0, 0);
                 }
             }
 
@@ -390,45 +442,58 @@ namespace Balanzas_MF
             foreach (DataRow row in salesDataTable.Rows)
             {
                 string codigo = row["c_Producto"].ToString();
+                string producto = row["Producto"].ToString();
+                decimal subtotal = Convert.ToDecimal(row["Sub Total"]);
 
-                // Verificar si el código no está vacío
-                if (!string.IsNullOrEmpty(codigo))
+                // Buscar si el código ya existe en la tabla de resultados
+                DataRow existingRow = resultTable.AsEnumerable().FirstOrDefault(r => r.Field<string>("codigo") == codigo);
+
+                if (existingRow != null)
                 {
-                    string producto = row["Producto"].ToString();
-                    decimal subtotal = Convert.ToDecimal(row["SubTotal"]);
-
-                    // Buscar si el código ya existe en la tabla de resultados
-                    DataRow existingRow = resultTable.AsEnumerable().FirstOrDefault(r => r.Field<string>("codigo") == codigo);
-
-                    if (existingRow != null)
-                    {
-                        // Si el código ya existe, agregar la descripción y el subtotal de ventas_ultranet
-                        existingRow["producto"] = producto;
-                        existingRow["ventas_ultranet"] = subtotal;
-                    }
-                    /*else
-                    {
-                        // Si el código no existe, agregar una nueva fila
-                        resultTable.Rows.Add(codigo, producto, 0, 0, subtotal, 0);
-                    }*/
+                    // Si el código ya existe, agregar la descripción y el subtotal de ventas_ultranet
+                    existingRow["producto"] = producto;
+                    existingRow["ventas_ultranet"] = subtotal;
+                }
+                else
+                {
+                    // Si el código no existe, agregar una nueva fila
+                    DataRow newRow = resultTable.NewRow();
+                    newRow["codigo"] = codigo;
+                    newRow["producto"] = producto;
+                    newRow["ventas_ultranet"] = subtotal;
+                    newRow["ventas_qendra"] = 0; // Establecer valores iniciales en 0
+                    newRow["errores_qendra"] = 0;
+                    newRow["diferencia_qendra"] = 0;
+                    newRow["total"] = 0;
+                    resultTable.Rows.Add(newRow);
                 }
             }
 
-            // Calcular el total
+            // Calcular el total y diferencia para cada fila
             foreach (DataRow row in resultTable.Rows)
             {
                 decimal ventas_qendra = Convert.ToDecimal(row["ventas_qendra"]);
                 decimal errores_qendra = Convert.ToDecimal(row["errores_qendra"]);
+                decimal diferencia_qendra = ventas_qendra - errores_qendra;
                 decimal ventas_ultranet = Convert.ToDecimal(row["ventas_ultranet"]);
-                decimal total = ventas_ultranet - ventas_qendra - errores_qendra;
+                decimal total = ventas_ultranet - diferencia_qendra;
+                row["diferencia_qendra"] = diferencia_qendra;
                 row["total"] = total;
-
-                // Sumar el valor de "total" a la variable totalSum
                 totalSum += total;
             }
 
+            // Filtrar las filas con valores iguales a 0 en las columnas relevantes
+            var filteredRows = resultTable.AsEnumerable().Where(row =>
+            {
+                decimal ventasQendra = Convert.ToDecimal(row["ventas_qendra"]);
+                decimal erroresQendra = Convert.ToDecimal(row["errores_qendra"]);
+                decimal ventasUltranet = Convert.ToDecimal(row["ventas_ultranet"]);
+
+                return ventasQendra != 0 || erroresQendra != 0 || ventasUltranet != 0;
+            }).CopyToDataTable();
+
             // Mostrar los resultados en dataGridView1
-            dataGridView1.DataSource = resultTable;
+            dataGridView1.DataSource = filteredRows;
             label_diferencia.Text = "Diferencia total:";
             label_total.Text = "$ " + totalSum;
 
@@ -437,6 +502,7 @@ namespace Balanzas_MF
             dataGridView1.Columns["producto"].HeaderText = "Producto";
             dataGridView1.Columns["ventas_qendra"].HeaderText = "Ventas Qendra";
             dataGridView1.Columns["errores_qendra"].HeaderText = "Errores Qendra";
+            dataGridView1.Columns["diferencia_qendra"].HeaderText = "Diferencia Qendra";
             dataGridView1.Columns["ventas_ultranet"].HeaderText = "Ventas UltraNet";
             dataGridView1.Columns["total"].HeaderText = "Total";
 
@@ -483,76 +549,107 @@ namespace Balanzas_MF
             }
         }
 
+        private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0)
+            {
+                dataGridView1.Rows[e.RowIndex].Selected = true;
+            }
+        }
+
         private void btn_print_report_Click(object sender, EventArgs e)
         {
-            // Crear un nuevo archivo Excel
-            ExcelPackage package = new ExcelPackage();
-            ExcelWorksheet worksheet = package.Workbook.Worksheets.Add("Reporte");
-
-            // Fusionar las celdas para el título
-            worksheet.Cells["A1:F1"].Merge = true;
-            string currentDate = DateTime.Now.ToString("yyyy-MM-dd");
-            worksheet.Cells["A1"].Value = "CONTROL DE BALANZAS AL " + currentDate;
-            worksheet.Cells["A1"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
-            worksheet.Cells["A1"].Style.Font.Bold = true;
-            worksheet.Cells["A1"].Style.Font.Size = 16;
-
-            // Agregar los encabezados de las columnas
-            for (int i = 0; i < dataGridView1.Columns.Count; i++)
-            {
-                worksheet.Cells[2, i + 1].Value = dataGridView1.Columns[i].HeaderText;
-                worksheet.Cells[2, i + 1].Style.Font.Bold = true;
-            }
-
-            // Agregar los datos de dataGridView1 al archivo Excel
-            for (int i = 0; i < dataGridView1.Rows.Count; i++)
-            {
-                for (int j = 0; j < dataGridView1.Columns.Count; j++)
-                {
-                    worksheet.Cells[i + 3, j + 1].Value = dataGridView1.Rows[i].Cells[j].Value;
-                    worksheet.Cells[i + 3, j + 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Left;
-                }
-            }
-
-            // Agregar la fila de "DIFERENCIA TOTAL"
-            worksheet.Cells[dataGridView1.Rows.Count + 2, 2].Value = "DIFERENCIA TOTAL";
-
-            // Calcular la suma de la columna "Total"
-            decimal totalSum = 0;
-            for (int i = 0; i < dataGridView1.Rows.Count; i++)
-            {
-                totalSum += Convert.ToDecimal(dataGridView1.Rows[i].Cells["Total"].Value);
-            }
-            worksheet.Cells[dataGridView1.Rows.Count + 2, dataGridView1.Columns.Count].Value = totalSum;
-
-            // Establecer el estilo de la fila "TOTAL" en negrita
-            worksheet.Cells[dataGridView1.Rows.Count + 2, 1, dataGridView1.Rows.Count + 2, dataGridView1.Columns.Count].Style.Font.Bold = true;
-
-            // Establecer el ancho de las columnas y el formato de las celdas
-            worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
-
-            // Configurar la propiedad de impresión para ajustar todas las columnas en una página
-            worksheet.PrinterSettings.FitToPage = true;
-            worksheet.PrinterSettings.FitToWidth = 1;
-
-            // Configurar el tamaño de papel por defecto como A4
-            worksheet.PrinterSettings.PaperSize = (ePaperSize)Enum.Parse(typeof(ePaperSize), "A4");
-
-
-            // Guardar el archivo
-            string fileName = $"Reporte Balanzas {currentDate}.xlsx";
-            string filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), fileName);
-            FileInfo file = new FileInfo(filePath);
-            package.SaveAs(file);
-
-            // Abrir el archivo automáticamente
             try
             {
-                System.Diagnostics.Process.Start(filePath);
+                // Crear un nuevo archivo Excel
+                ExcelPackage package = new ExcelPackage();
+                ExcelWorksheet worksheet = package.Workbook.Worksheets.Add("Reporte");
+
+                // Fusionar las celdas para el título
+                worksheet.Cells["A1:G1"].Merge = true;
+                string currentDate = DateTime.Now.ToString("yyyy-MM-dd");
+                worksheet.Cells["A1"].Value = "CONTROL DE BALANZAS AL " + currentDate;
+                worksheet.Cells["A1"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                worksheet.Cells["A1"].Style.Font.Bold = true;
+                worksheet.Cells["A1"].Style.Font.Size = 16;
+
+                // Agregar los encabezados de las columnas
+                for (int i = 0; i < dataGridView1.Columns.Count; i++)
+                {
+                    worksheet.Cells[2, i + 1].Value = dataGridView1.Columns[i].HeaderText;
+                    worksheet.Cells[2, i + 1].Style.Font.Bold = true;
+                }
+
+                // Agregar los datos de dataGridView1 al archivo Excel
+                for (int i = 0; i < dataGridView1.Rows.Count; i++)
+                {
+                    for (int j = 0; j < dataGridView1.Columns.Count; j++)
+                    {
+                        worksheet.Cells[i + 3, j + 1].Value = dataGridView1.Rows[i].Cells[j].Value;
+                        worksheet.Cells[i + 3, j + 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Left;
+                    }
+                }
+
+                // Agregar la fila de "DIFERENCIA TOTAL"
+                worksheet.Cells[dataGridView1.Rows.Count + 3, 2].Value = "DIFERENCIA TOTAL";
+
+                // Calcular la suma de la columna "Total"
+                decimal totalSum = 0;
+                for (int i = 0; i < dataGridView1.Rows.Count; i++)
+                {
+                    totalSum += Convert.ToDecimal(dataGridView1.Rows[i].Cells["Total"].Value);
+                }
+                worksheet.Cells[dataGridView1.Rows.Count + 3, dataGridView1.Columns.Count].Value = totalSum;
+
+                // Establecer el estilo de la fila "TOTAL" en negrita
+                worksheet.Cells[dataGridView1.Rows.Count + 3, 1, dataGridView1.Rows.Count + 3, dataGridView1.Columns.Count].Style.Font.Bold = true;
+
+                // Establecer el ancho de las columnas y el formato de las celdas
+                worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+
+                // Ajustar la alineación de las columnas en el archivo Excel generado
+                for (int i = 1; i <= worksheet.Dimension.Columns; i++)
+                {
+                    if (i != 1) // Ignorar la primera columna que contiene el título
+                    {
+                        worksheet.Column(i).Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Left;
+                    }
+                }
+
+                // Configurar la propiedad de impresión para ajustar todas las columnas en una página
+                worksheet.PrinterSettings.FitToPage = true;
+                worksheet.PrinterSettings.FitToWidth = 1;
+                worksheet.PrinterSettings.FitToHeight = 0;
+
+                // Configurar el tamaño de papel por defecto como A4
+                worksheet.PrinterSettings.PaperSize = (ePaperSize)Enum.Parse(typeof(ePaperSize), "A4");
+
+
+                // Guardar el archivo
+                string fileName = $"Reporte Balanzas {currentDate}.xlsx";
+                string filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), fileName);
+                FileInfo file = new FileInfo(filePath);
+                package.SaveAs(file);
+
+                // Abrir el archivo automáticamente
+                try
+                {
+                    System.Diagnostics.Process.Start(filePath);
+                }
+                catch (System.ComponentModel.Win32Exception)
+                {
+                    MessageBox.Show("Error: No se pudo abrir el archivo.");
+                }
             }
-            catch (System.ComponentModel.Win32Exception)
+            catch (System.IO.IOException)
             {
-                MessageBox.Show("Error: No se pudo abrir el archivo.");
+                // Manejar la excepción cuando el archivo ya está abierto
+                MessageBox.Show("El archivo está siendo utilizado por otra aplicación. Cierre el archivo y vuelva a intentarlo.", "Error al guardar", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                // Manejar otras excepciones
+                MessageBox.Show("Ocurrió un error al guardar el archivo: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }

@@ -28,6 +28,7 @@ namespace Balanzas_MF
             num_code.KeyDown += NumericUpDown_KeyDown;
             num_amount.KeyDown += NumericUpDown_KeyDown;
             dataGridViewErrors.KeyPress += dataGridViewErrors_KeyPress;
+            dataGridViewErrors.CellClick += dataGridViewErrors_CellClick;
         }
 
         private void FormErrores_Load(object sender, EventArgs e)
@@ -47,6 +48,14 @@ namespace Balanzas_MF
             // Limpiar los NumericUpDown
             num_code.Value = 0;
             num_amount.Value = 0;
+        }
+
+        private void dataGridViewErrors_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0)
+            {
+                dataGridViewErrors.Rows[e.RowIndex].Selected = true;
+            }
         }
 
         private void btn_errors_ok_Click(object sender, EventArgs e)

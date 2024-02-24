@@ -96,10 +96,12 @@
             // 
             // dataGridViewErrors
             // 
+            this.dataGridViewErrors.AllowUserToAddRows = false;
             this.dataGridViewErrors.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dataGridViewErrors.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridViewErrors.Location = new System.Drawing.Point(77, 145);
             this.dataGridViewErrors.Name = "dataGridViewErrors";
+            this.dataGridViewErrors.ReadOnly = true;
             this.dataGridViewErrors.Size = new System.Drawing.Size(489, 126);
             this.dataGridViewErrors.TabIndex = 5;
             // 
@@ -136,7 +138,10 @@
             this.Controls.Add(this.label2);
             this.Controls.Add(this.num_code);
             this.Controls.Add(this.label1);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "FormErrores";
             this.Text = "FormErrores";
             this.Load += new System.EventHandler(this.FormErrores_Load);
