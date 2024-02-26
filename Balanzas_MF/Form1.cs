@@ -20,8 +20,6 @@ namespace Balanzas_MF
         private DataTable salesDataTable;
         private List<DataTable> balDataTables;
         private DataTable errorsDataTable = new DataTable();
-        // Define un conjunto de códigos de rubro excluidos como un campo de clase
-        private HashSet<string> excludedRubroCodes = new HashSet<string>();
 
         public Form1()
         {
@@ -29,6 +27,15 @@ namespace Balanzas_MF
             salesDataTable = new DataTable();
             balDataTables = new List<DataTable>();
             dataGridView1.CellClick += dataGridView1_CellClick;
+            // Agregar las columnas al DataTable de errores
+            errorsDataTable.Columns.Add("Código", typeof(string));
+            errorsDataTable.Columns.Add("Monto", typeof(decimal));
+        }
+
+        // Método para obtener la tabla de errores
+        public DataTable GetErrorsDataTable()
+        {
+            return errorsDataTable;
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -171,10 +178,15 @@ namespace Balanzas_MF
         // Método para recibir los datos de errores desde FormErrores y cerrar FormErrores
         public void ReceiveErrorsData(DataTable errorsData)
         {
-            // Copiar los datos de los errores al DataTable en Form1
-            errorsDataTable = errorsData;
+            // Limpiar errorsDataTable
+            errorsDataTable.Rows.Clear();
+            // Agregar los errores al DataTable global
+            foreach (DataRow row in errorsData.Rows)
+            {
+                errorsDataTable.ImportRow(row);
+            }
 
-            // Aquí puedes trabajar con los datos de los errores en errorsDataTable según tus necesidades
+            // Cambiar el label de Errores
             label_errors.Text = "Cargado";
             // Cerrar FormErrores
             CloseFormErrores();
@@ -312,7 +324,6 @@ namespace Balanzas_MF
                         {
                             string codigo = parts[0];
                             
-
                             // Verificar si el código es numérico antes de agregar la fila
                             int codigoInt;
                             if (!string.IsNullOrEmpty(codigo) && int.TryParse(codigo, out codigoInt) && codigoInt >= 100)
@@ -326,10 +337,8 @@ namespace Balanzas_MF
                     }
                 }
             }
-
             balDataTables.Add(balDataTable);
         }
-
 
         private void btn_process_data_Click(object sender, EventArgs e)
         {
@@ -388,7 +397,6 @@ namespace Balanzas_MF
                     }
                 }
             }
-
 
             // Procesar los errores de FormErrores
             foreach (DataRow row in errorsDataTable.Rows)
@@ -547,6 +555,14 @@ namespace Balanzas_MF
                 // Vuelve a asignar la fuente de datos al DataGridView
                 dataGridView1.DataSource = dataTable;
             }
+            // Establecer el formato de las celdas para mostrar dos decimales
+            foreach (DataGridViewColumn column in dataGridView1.Columns)
+            {
+                if (column.ValueType == typeof(decimal))
+                {
+                    column.DefaultCellStyle.Format = "N2";
+                }
+            }
         }
 
         private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
@@ -607,12 +623,15 @@ namespace Balanzas_MF
                 // Establecer el ancho de las columnas y el formato de las celdas
                 worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
 
+                // Aplicar formato para mostrar dos decimales en todas las celdas
+                worksheet.Cells[worksheet.Dimension.Address].Style.Numberformat.Format = "0.00";
+
                 // Ajustar la alineación de las columnas en el archivo Excel generado
                 for (int i = 1; i <= worksheet.Dimension.Columns; i++)
                 {
-                    if (i != 1) // Ignorar la primera columna que contiene el título
+                    if (i != 1 && i != 2) // Ignorar la primera columna que contiene el título
                     {
-                        worksheet.Column(i).Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Left;
+                        worksheet.Column(i).Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Right;
                     }
                 }
 
@@ -623,7 +642,6 @@ namespace Balanzas_MF
 
                 // Configurar el tamaño de papel por defecto como A4
                 worksheet.PrinterSettings.PaperSize = (ePaperSize)Enum.Parse(typeof(ePaperSize), "A4");
-
 
                 // Guardar el archivo
                 string fileName = $"Reporte Balanzas {currentDate}.xlsx";

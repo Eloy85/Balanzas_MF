@@ -18,7 +18,6 @@ namespace Balanzas_MF
         {
             InitializeComponent();
             parentForm = parent;
-            //btn_errors_ok.Click += btn_errors_ok_Click;
 
             // Agregar las columnas al DataGridView
             dataGridViewErrors.Columns.Add("Code", "Código");
@@ -34,13 +33,23 @@ namespace Balanzas_MF
         private void FormErrores_Load(object sender, EventArgs e)
         {
             this.CenterToScreen();
+
+            // Limpiar el DataGridView antes de cargar los datos
+            dataGridViewErrors.Rows.Clear();
+            DataTable errorsDataTable = parentForm.GetErrorsDataTable();
+            foreach (DataRow row in errorsDataTable.Rows)
+            {
+                string code = row["Código"].ToString();
+                string amount = row["Monto"].ToString();
+                dataGridViewErrors.Rows.Add(code, amount);
+            }
         }
 
         private void btn_add_error_Click(object sender, EventArgs e)
         {
             // Obtener los valores de los NumericUpDown
             string code = num_code.Value.ToString();
-            string amount = num_amount.Value.ToString();
+            string amount = num_amount.Value.ToString("N2");
 
             // Agregar los valores al DataGridView
             dataGridViewErrors.Rows.Add(code, amount);
