@@ -20,6 +20,7 @@ namespace Balanzas_MF
         private DataTable salesDataTable;
         private List<DataTable> balDataTables;
         private DataTable errorsDataTable = new DataTable();
+        private List<Rubro> rubros = new List<Rubro>();
 
         public Form1()
         {
@@ -36,6 +37,21 @@ namespace Balanzas_MF
         public DataTable GetErrorsDataTable()
         {
             return errorsDataTable;
+        }
+
+        // Define una clase para representar los rubros y sus productos
+        public class Rubro
+        {
+            public string Codigo { get; set; }
+            public string Nombre { get; set; }
+            public List<string> Productos { get; set; }
+
+            public Rubro(string codigo)
+            {
+                Codigo = codigo;
+                Nombre = "";
+                Productos = new List<string>();
+            }
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -302,7 +318,7 @@ namespace Balanzas_MF
                 while ((line = sr.ReadLine()) != null)
                 {
                     // Si encontramos la línea que indica el inicio de los datos relevantes
-                    if (line.Contains("NUMERO  DESCRIPCION"))
+                    if (line.Contains("NUMERO") || line.Contains("CODIGO"))
                     {
                         startReading = true;
                         continue;
@@ -360,6 +376,13 @@ namespace Balanzas_MF
 
             // Procesar los datos de los archivos txt
 
+            // Definir la lista de códigos de productos excluidos y la suma de sus montos
+            List<string> codigosExcluidos = new List<string> { "154", "158", "164", "165", "166", 
+                "167", "168", "199", "204", "227", "272", "273", "274", "276", "277", "278", "279", 
+                "293", "302", "303", "304", "306", "308", "406", "407", "408", "409", "417", "418", 
+                "954" };
+            decimal totalExcluidos = 0;
+
             // Crear una instancia de CultureInfo con la cultura específica que deseas utilizar
             CultureInfo culture = new CultureInfo("es-ES"); // En este caso, la cultura sería para los decimales con coma (,)
             foreach (DataTable balDataTable in balDataTables)
@@ -371,31 +394,58 @@ namespace Balanzas_MF
                     // Verificar si el código no está vacío
                     if (!string.IsNullOrEmpty(codigo))
                     {
-                        // Convertir el valor de SUBTOTAL a decimal utilizando la cultura adecuada
-                        decimal subtotal;
-                        if (decimal.TryParse(row["SUBTOTAL"].ToString(), NumberStyles.Float, culture, out subtotal))
+                        // Verificar si el código está en la lista de códigos excluidos
+                        if (codigosExcluidos.Contains(codigo))
                         {
-                            // Buscar si el código ya existe en la tabla de resultados
-                            DataRow existingRow = resultTable.AsEnumerable().FirstOrDefault(r => r.Field<string>("codigo") == codigo);
-
-                            if (existingRow != null)
+                            // Sumar el monto del producto excluido al total de excluidos
+                            decimal subtotal;
+                            if (decimal.TryParse(row["SUBTOTAL"].ToString(), NumberStyles.Float, culture, out subtotal))
                             {
-                                // Si el código ya existe, sumar el subtotal a las ventas_qendra existentes
-                                existingRow["ventas_qendra"] = Convert.ToDecimal(existingRow["ventas_qendra"]) + subtotal;
+                                totalExcluidos += subtotal;
                             }
                             else
                             {
-                                // Si el código no existe, agregar una nueva fila
-                                resultTable.Rows.Add(codigo, null, subtotal, 0, 0, 0);
+                                // Manejar el caso en que la conversión falle
+                                MessageBox.Show("Error: No se pudieron leer correctamente los datos de las balanzas.");
                             }
                         }
                         else
                         {
-                            // Manejar el caso en que la conversión falla
-                            MessageBox.Show("Error: No se pudieron leer correctamente los datos de las balanzas.");
+                            // Convertir el valor de SUBTOTAL a decimal utilizando la cultura adecuada
+                            decimal subtotal;
+                            if (decimal.TryParse(row["SUBTOTAL"].ToString(), NumberStyles.Float, culture, out subtotal))
+                            {
+                                // Buscar si el código ya existe en la tabla de resultados
+                                DataRow existingRow = resultTable.AsEnumerable().FirstOrDefault(r => r.Field<string>("codigo") == codigo);
+
+                                if (existingRow != null)
+                                {
+                                    // Si el código ya existe, sumar el subtotal a las ventas_qendra existentes
+                                    existingRow["ventas_qendra"] = Convert.ToDecimal(existingRow["ventas_qendra"]) + subtotal;
+                                }
+                                else
+                                {
+                                    // Si el código no existe, agregar una nueva fila
+                                    resultTable.Rows.Add(codigo, null, subtotal, 0, 0, 0);
+                                }
+                            }
+                            else
+                            {
+                                // Manejar el caso en que la conversión falla
+                                MessageBox.Show("Error: No se pudieron leer correctamente los datos de las balanzas.");
+                            }
                         }
                     }
                 }
+            }
+            // Verificar si se encontraron productos excluidos
+            if (totalExcluidos > 0)
+            {
+                // Agregar una nueva fila al DataTable para los productos excluidos
+                DataRow newRow = resultTable.NewRow();
+                newRow["producto"] = "Productos excluidos";
+                newRow["errores_qendra"] = totalExcluidos;
+                resultTable.Rows.Add(newRow);
             }
 
             // Procesar los errores de FormErrores
@@ -477,6 +527,58 @@ namespace Balanzas_MF
                 }
             }
 
+            // Crea instancias de la clase Rubro y asigna los productos correspondientes
+            rubros = new List<Rubro>
+            {
+                new Rubro("1") { Nombre = "CARNES VACUNA", Productos = { "100", "1000","1006", "1007", 
+                        "1017", "1018", "103", "105", "106", "107", "110", "112", "115", "116", "118", 
+                        "119", "120", "125", "126", "129", "130", "133", "134", "135", "138", "139", 
+                        "140", "144", "145", "150", "155", "156", "160", "170", "180", "185", "186", 
+                        "188", "190", "191", "193", "901" } },
+                new Rubro("10") { Nombre = "FIAMBRES", Productos = { "121", "122", "127", "136", 
+                        "148", "195", "211", "275", "351", "352", "353", "354", "355", "356", "357", 
+                        "358", "359", "360", "361", "362", "363", "364", "365", "366", "367", "368", 
+                        "369", "370", "371", "372", "373", "374", "375", "376", "377", "378", "379", 
+                        "380", "381", "382", "383", "384", "385", "386", "387", "388", "389", "390", 
+                        "391", "392", "405", "415", "421", "432", "433", "434", "441", "442", "491", 
+                        "492", "518", "531", "602", "603", "604", "605", "614", "615", "631", "684", 
+                        "929", "930", "934" } },
+                new Rubro("11") { Nombre = "QUESOS", Productos = { "137", "149", "162", "194", "212", 
+                        "216", "235", "422", "425", "428", "450", "451", "452", "453", "454", "455", 
+                        "456", "457", "458", "459", "460", "461", "462", "463", "464", "465", "466", 
+                        "467", "468", "469", "470", "471", "472", "473", "474", "475", "476", "477", 
+                        "478", "479", "480", "481", "482", "483", "484", "616", "624", "633", "638", 
+                        "639", "640", "648", "676", "677", "678", "683", "867", "874", "896", "897",
+                        "928", "931", "939", "940" } },
+                new Rubro("112") { Nombre = "PANIFICAD. PESABL.", Productos = { "699", } },
+                new Rubro("113") { Nombre = "DULCES X KG.", Productos = { "593", "594", "595", "596", 
+                        "597", "598", "599", } },
+                new Rubro("115") { Nombre = "ENCURTIDOS X KG.", Productos = { "742", "743", "747", 
+                        "748", "991", "993" } },
+                new Rubro("17") { Nombre = "CONGELADOS", Productos = { "154", "158", "164", "165", 
+                        "166", "167", "168", "199", "204", "227", "272", "273", "274", "276", "277", 
+                        "278", "279", "293", "302", "303", "304", "306", "308", "406", "407", "408", 
+                        "409", "417", "418", "954" } },
+                new Rubro("2") { Nombre = "CARNES DE CERDO", Productos = { "1001", "1008", "1009", 
+                        "1015","1016", "1019", "176", "177", "200", "205", "206", "210", "215", "218", 
+                        "219", "220", "230", "231", "240", "250", "260", "265", "266", "270", "280", 
+                        "283", "286", "289", "290", "292", "295", "296", "298", "629", "900" } },
+                new Rubro("3") { Nombre = "POLLOS", Productos = { "505", "510", "515", "520", "550", 
+                        "705", "710", "715", "720", "721", "724", "750" } },
+                new Rubro("4") { Nombre = "ACHURAS", Productos = { "1005", "899", "960", "961", "963", 
+                        "964", "965", "966", "970", "988", "989", "990" } },
+                new Rubro("5") { Nombre = "CABR.CORD.LECHON", Productos = { "307", "431", "819" } },
+                new Rubro("6") { Nombre = "ELAB. DE CARNE", Productos = { "300", "305", "310", 
+                        "400", "507", "508", "509", "521", "600", "601", "617", "831" } },
+                new Rubro("7") { Nombre = "ELAB. DE CERDO", Productos = { "330", "331", "332", 
+                        "350", "410", "610", "611", "618", "711", "800", "810", "820", "830", "840", 
+                        "855", "865", "866", "875", "880", "885", "895" } },
+                new Rubro("8") { Nombre = "ELAB. DE POLLO", Productos = { "320", "325", "420", 
+                        "430", "506", "620", "623", "821", "881" } },
+                new Rubro("9") { Nombre = "ELAB. MIXTOS", Productos = { "440", "522", "523", "524", 
+                        "651", "652", "653", "698" } },
+            };
+
             // Calcular el total y diferencia para cada fila
             foreach (DataRow row in resultTable.Rows)
             {
@@ -490,18 +592,86 @@ namespace Balanzas_MF
                 totalSum += total;
             }
 
-            // Filtrar las filas con valores iguales a 0 en las columnas relevantes
+            // Filtrar las filas con valores diferentes de DBNull y cero en las columnas relevantes
             var filteredRows = resultTable.AsEnumerable().Where(row =>
             {
-                decimal ventasQendra = Convert.ToDecimal(row["ventas_qendra"]);
-                decimal erroresQendra = Convert.ToDecimal(row["errores_qendra"]);
-                decimal ventasUltranet = Convert.ToDecimal(row["ventas_ultranet"]);
+                // Verificar y convertir las columnas relevantes a decimal
+                decimal ventasQendra = 0;
+                object ventasQendraObject = row["ventas_qendra"];
+                if (ventasQendraObject != DBNull.Value)
+                {
+                    ventasQendra = Convert.ToDecimal(ventasQendraObject);
+                }
 
+                decimal erroresQendra = 0;
+                object erroresQendraObject = row["errores_qendra"];
+                if (erroresQendraObject != DBNull.Value)
+                {
+                    erroresQendra = Convert.ToDecimal(erroresQendraObject);
+                }
+
+                decimal ventasUltranet = 0;
+                object ventasUltranetObject = row["ventas_ultranet"];
+                if (ventasUltranetObject != DBNull.Value)
+                {
+                    ventasUltranet = Convert.ToDecimal(ventasUltranetObject);
+                }
+
+                // Devolver verdadero si alguna de las columnas es diferente de cero
                 return ventasQendra != 0 || erroresQendra != 0 || ventasUltranet != 0;
             }).CopyToDataTable();
 
-            // Mostrar los resultados en dataGridView1
+            // Verificar si se encontraron productos excluidos
+            if (totalExcluidos > 0)
+            {
+                // Agregar una nueva fila al DataTable para los productos excluidos
+                DataRow newRow = filteredRows.NewRow();
+                newRow["codigo"] = DBNull.Value; // No hay código asociado
+                newRow["producto"] = "Productos excluidos";
+                newRow["ventas_qendra"] = 0; // No hay ventas Qendra asociadas
+                newRow["errores_qendra"] = totalExcluidos;
+                newRow["diferencia_qendra"] = -totalExcluidos;
+                newRow["ventas_ultranet"] = 0; // No hay ventas UltraNet asociadas
+                newRow["total"] = -totalExcluidos; // Usar un valor negativo para indicar que es una pérdida
+                filteredRows.Rows.Add(newRow);
+            }
+
+            // Crear una nueva tabla para los totales de los rubros
+            DataTable totalRubroTable = new DataTable();
+            totalRubroTable.Columns.Add("codigo");
+            totalRubroTable.Columns.Add("nombre");
+            totalRubroTable.Columns.Add("ventas_qendra");
+            totalRubroTable.Columns.Add("errores");
+            totalRubroTable.Columns.Add("diferencia");
+            totalRubroTable.Columns.Add("ventas_ultranet");
+            totalRubroTable.Columns.Add("total", typeof(decimal));
+
+            // Calcular total de cada rubro
+            foreach (var rubro in rubros)
+            {
+                decimal totalRubro = 0;
+
+                // Sumar los totales de los productos del rubro
+                foreach (DataRow row in filteredRows.Rows)
+                {
+                    if (rubro.Productos.Contains(row["codigo"].ToString()))
+                    {
+                        totalRubro += Convert.ToDecimal(row["total"]);
+                    }
+                }
+
+                // Agregar una fila para el total del rubro a la tabla de totales de rubro
+                totalRubroTable.Rows.Add(null, rubro.Nombre, null, null, null, null, totalRubro);
+            }
+
+            // Agregar las filas de totales de rubro al filteredRows
+            foreach (DataRow row in totalRubroTable.Rows)
+            {
+                filteredRows.Rows.Add(row.ItemArray);
+            }
+
             dataGridView1.DataSource = filteredRows;
+
             label_diferencia.Text = "Diferencia total:";
             label_total.Text = "$ " + totalSum;
 
@@ -512,10 +682,10 @@ namespace Balanzas_MF
             dataGridView1.Columns["errores_qendra"].HeaderText = "Errores Qendra";
             dataGridView1.Columns["diferencia_qendra"].HeaderText = "Diferencia Qendra";
             dataGridView1.Columns["ventas_ultranet"].HeaderText = "Ventas UltraNet";
-            dataGridView1.Columns["total"].HeaderText = "Total";
+            dataGridView1.Columns["total"].HeaderText = "Diferencia total";
 
             // Ordenar tabla por código
-            OrdenarDataGridView1("codigo");
+            OrdenarDataGridView1(filteredRows);
         }
 
         private void btn_clean_fields_Click(object sender, EventArgs e)
@@ -544,17 +714,49 @@ namespace Balanzas_MF
             label_total.Text = "";
         }
 
-        private void OrdenarDataGridView1(string columnName)
+        private void OrdenarDataGridView1(DataTable filteredRows)
         {
-            // Verifica si hay datos en el dataGridView1
-            if (dataGridView1.DataSource is DataTable dataTable)
-            {
-                // Ordena el DataTable por la columna 2
-                dataTable.DefaultView.Sort = columnName + " ASC";
+            // Crear una nueva tabla para los datos ordenados
+            DataTable orderedData = filteredRows.Clone();
 
-                // Vuelve a asignar la fuente de datos al DataGridView
-                dataGridView1.DataSource = dataTable;
+            // Calcular los totales de los rubros y agregar las filas al DataGridView
+            foreach (var rubro in rubros)
+            {
+                decimal totalRubro = 0;
+
+                // Agregar las filas de cada producto perteneciente a ese rubro
+                foreach (var codigoProducto in rubro.Productos)
+                {
+                    DataRow productoRow = filteredRows.Select($"codigo = '{codigoProducto}'").FirstOrDefault();
+                    if (productoRow != null)
+                    {
+                        totalRubro += Convert.ToDecimal(productoRow["total"]); // Sumar el total del producto al total del rubro
+                        orderedData.Rows.Add(productoRow.ItemArray); // Agregar la fila del producto al orderedData
+                    }
+                }
+
+                // Agregar una fila al orderedData con el total del rubro
+                orderedData.Rows.Add(null, rubro.Nombre, null, null, null, null, totalRubro);
             }
+
+            // Calcular el total de los productos excluidos
+            DataRow productosExcluidosRow = filteredRows.Select("producto = 'Productos excluidos'").FirstOrDefault();
+            decimal totalProductosExcluidos = productosExcluidosRow != null ? Convert.ToDecimal(productosExcluidosRow["errores_qendra"]) : 0;
+
+            // Calcular el total general restando el total de productos excluidos
+            decimal totalGeneral = orderedData.AsEnumerable()
+                                               .Where(row => row.Field<string>("codigo") != null) // Filtrar filas de rubros
+                                               .Sum(row => Convert.ToDecimal(row["total"])) - totalProductosExcluidos;
+
+            // Agregar la fila de productos excluidos al orderedData si existe
+            if (productosExcluidosRow != null)
+            {
+                orderedData.Rows.Add(productosExcluidosRow.ItemArray);
+            }
+
+            // Enlazar la nueva tabla al DataGridView
+            dataGridView1.DataSource = orderedData;
+
             // Establecer el formato de las celdas para mostrar dos decimales
             foreach (DataGridViewColumn column in dataGridView1.Columns)
             {
@@ -563,7 +765,20 @@ namespace Balanzas_MF
                     column.DefaultCellStyle.Format = "N2";
                 }
             }
+
+            // Resaltar las filas de totales de rubros y productos excluidos en negrita
+            foreach (DataGridViewRow row in dataGridView1.Rows)
+            {
+                if (row.Cells["codigo"].Value == DBNull.Value)
+                {
+                    row.DefaultCellStyle.Font = new Font(dataGridView1.Font, FontStyle.Bold);
+                }
+            }
+
+            // Actualizar la etiqueta de la diferencia total
+            label_total.Text = "$ " + totalGeneral;
         }
+
 
         private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
         {
@@ -597,28 +812,70 @@ namespace Balanzas_MF
                 }
 
                 // Agregar los datos de dataGridView1 al archivo Excel
+                int excelRowIndex = 3; // Comenzar desde la tercera fila después del título y la fila de encabezados
                 for (int i = 0; i < dataGridView1.Rows.Count; i++)
                 {
                     for (int j = 0; j < dataGridView1.Columns.Count; j++)
                     {
-                        worksheet.Cells[i + 3, j + 1].Value = dataGridView1.Rows[i].Cells[j].Value;
-                        worksheet.Cells[i + 3, j + 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Left;
+                        worksheet.Cells[excelRowIndex, j + 1].Value = dataGridView1.Rows[i].Cells[j].Value;
+                        worksheet.Cells[excelRowIndex, j + 1].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Left;
+                        // Verifica si la fila es un total de rubro y aplica negrita si es así
+                        if (dataGridView1.Rows[i].Cells["producto"].Value?.ToString() == "Productos excluidos")
+                        {
+                            worksheet.Cells[excelRowIndex, j + 1].Style.Font.Bold = true;
+                        }
+                    }
+                    excelRowIndex++;
+                }
+
+                // Agregar la fila de "TOTALES"
+                int lastRowIndex = dataGridView1.Rows.Count + 3; // Última fila de datos + 3 (título, fila de totales y nueva fila "TOTALES")
+                worksheet.Cells[lastRowIndex, 2].Value = "TOTALES";
+
+                // Calcular la suma total de cada columna
+                for (int i = 2; i < dataGridView1.Columns.Count - 1; i++) // Ignorar las dos primeras columnas que contiene el título
+                {
+                    decimal totalSum = 0;
+                    for (int j = 0; j < dataGridView1.Rows.Count; j++)
+                    {
+                        if (dataGridView1.Rows[j].Cells[i].Value != null)
+                        {
+                            decimal cellValue;
+                            if (decimal.TryParse(dataGridView1.Rows[j].Cells[i].Value?.ToString(), out cellValue))
+                            {
+                                totalSum += cellValue;
+                            }
+                        }
+                    }
+                    worksheet.Cells[lastRowIndex, i + 1].Value = totalSum; // i + 1 porque Excel comienza desde la columna 1
+                }
+
+                // Calcular la suma total de "Diferencia Qendra" y "Ventas UltraNet"
+                decimal totalDiferenciaQendra = 0;
+                decimal totalVentasUltraNet = 0;
+
+                for (int j = 0; j < dataGridView1.Rows.Count; j++)
+                {
+                    object value_qendra = dataGridView1.Rows[j].Cells["diferencia_qendra"].Value;
+
+                    if (value_qendra != DBNull.Value && value_qendra != null)
+                    {
+                        totalDiferenciaQendra += Convert.ToDecimal(value_qendra);
+                    }
+                    object value_un = dataGridView1.Rows[j].Cells["ventas_ultranet"].Value;
+
+                    if (value_un != DBNull.Value && value_un != null)
+                    {
+                        totalVentasUltraNet += Convert.ToDecimal(value_un);
                     }
                 }
 
-                // Agregar la fila de "DIFERENCIA TOTAL"
-                worksheet.Cells[dataGridView1.Rows.Count + 3, 2].Value = "DIFERENCIA TOTAL";
+                // Calcular el total general restando el total de "Diferencia Qendra" al total de "Ventas UltraNet"
+                decimal totalGeneral = totalVentasUltraNet - totalDiferenciaQendra;
+                worksheet.Cells[lastRowIndex, dataGridView1.Columns.Count].Value = totalGeneral;
 
-                // Calcular la suma de la columna "Total"
-                decimal totalSum = 0;
-                for (int i = 0; i < dataGridView1.Rows.Count; i++)
-                {
-                    totalSum += Convert.ToDecimal(dataGridView1.Rows[i].Cells["Total"].Value);
-                }
-                worksheet.Cells[dataGridView1.Rows.Count + 3, dataGridView1.Columns.Count].Value = totalSum;
-
-                // Establecer el estilo de la fila "TOTAL" en negrita
-                worksheet.Cells[dataGridView1.Rows.Count + 3, 1, dataGridView1.Rows.Count + 3, dataGridView1.Columns.Count].Style.Font.Bold = true;
+                // Establecer el estilo de la fila "TOTALES" en negrita
+                worksheet.Cells[lastRowIndex, 1, lastRowIndex, dataGridView1.Columns.Count].Style.Font.Bold = true;
 
                 // Establecer el ancho de las columnas y el formato de las celdas
                 worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
@@ -670,5 +927,6 @@ namespace Balanzas_MF
                 MessageBox.Show("Ocurrió un error al guardar el archivo: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
     }
 }
