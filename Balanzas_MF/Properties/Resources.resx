@@ -121,4 +121,10 @@
   <data name="balanza" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\balanza.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="cog-gear-settings" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\cog-gear-settings.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="3592841-cog-gear-general-machine-office-setting-settings_107765" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\3592841-cog-gear-general-machine-office-setting-settings_107765.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>

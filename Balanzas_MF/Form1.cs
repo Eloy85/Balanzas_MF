@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Configuration;
 using System.Data;
 using System.Drawing;
 using System.Drawing.Printing;
@@ -11,6 +13,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml;
 using OfficeOpenXml;
 
 namespace Balanzas_MF
@@ -21,6 +24,11 @@ namespace Balanzas_MF
         private List<DataTable> balDataTables;
         private DataTable errorsDataTable = new DataTable();
         private List<Rubro> rubros = new List<Rubro>();
+        private string filePath;
+        private bool askReportLocation;
+        private HashSet<int> excludedRubroCodes = new HashSet<int>();
+        private List<int> codigosExcluidos = new List<int>();
+        private DataTable rubrosDataTable = new DataTable();
 
         public Form1()
         {
@@ -66,6 +74,7 @@ namespace Balanzas_MF
             label_bal5.Text = "";
             label_diferencia.Text = "";
             label_total.Text = "";
+            ConfigurationLoad();
         }
 
         private void btn_load_sales_Click(object sender, EventArgs e)
@@ -134,9 +143,6 @@ namespace Balanzas_MF
                 // Inicializar un diccionario para rastrear los subtotales por código de producto
                 Dictionary<string, Tuple<string, decimal>> subtotalDictionary = new Dictionary<string, Tuple<string, decimal>>();
 
-                // Excluir ciertos códigos de rubro
-                HashSet<string> excludedRubroCodes = new HashSet<string> { "12", "13", "14", "15", "17", "18", "19", "20", "22", "23", "24", "25", "100", "110", "111", "114" };
-
                 // Iterar sobre las filas para obtener los datos
                 for (int row = productoRowIndex + 1; row <= rowCount; row++)
                 {
@@ -144,7 +150,7 @@ namespace Balanzas_MF
                     string rubro = worksheet.Cells[row, rubroColumnIndex].Value?.ToString();
 
                     // Verificar si el código de rubro está excluido
-                    if (excludedRubroCodes.Contains(rubro))
+                    if (excludedRubroCodes.Contains(int.Parse(rubro)))
                     {
                         continue; // Saltar esta fila
                     }
@@ -376,11 +382,7 @@ namespace Balanzas_MF
 
             // Procesar los datos de los archivos txt
 
-            // Definir la lista de códigos de productos excluidos y la suma de sus montos
-            List<string> codigosExcluidos = new List<string> { "154", "158", "164", "165", "166", 
-                "167", "168", "199", "204", "227", "272", "273", "274", "276", "277", "278", "279", 
-                "293", "302", "303", "304", "306", "308", "406", "407", "408", "409", "417", "418", 
-                "954" };
+            // Definir la variable para sumar los productos excluidos
             decimal totalExcluidos = 0;
 
             // Crear una instancia de CultureInfo con la cultura específica que deseas utilizar
@@ -395,7 +397,7 @@ namespace Balanzas_MF
                     if (!string.IsNullOrEmpty(codigo))
                     {
                         // Verificar si el código está en la lista de códigos excluidos
-                        if (codigosExcluidos.Contains(codigo))
+                        if (codigosExcluidos.Contains(int.Parse(codigo)))
                         {
                             // Sumar el monto del producto excluido al total de excluidos
                             decimal subtotal;
@@ -527,8 +529,19 @@ namespace Balanzas_MF
                 }
             }
 
+            foreach (DataRow row in rubrosDataTable.Rows)
+            {
+                string[] productos = row[2].ToString().Split(',');
+                List<string> listaProductos = new List<string>();
+                foreach (string producto in productos)
+                {
+                    listaProductos.Add(producto.Trim());
+                }
+                rubros.Add(new Rubro(row[0].ToString()) { Nombre = row[1].ToString(), Productos = listaProductos });
+            }
+
             // Crea instancias de la clase Rubro y asigna los productos correspondientes
-            rubros = new List<Rubro>
+            /*rubros = new List<Rubro>
             {
                 new Rubro("1") { Nombre = "CARNES VACUNA", Productos = { "100", "1000","1006", "1007", 
                         "1017", "1018", "103", "105", "106", "107", "110", "112", "115", "116", "118", 
@@ -577,7 +590,7 @@ namespace Balanzas_MF
                         "430", "506", "620", "623", "821", "881" } },
                 new Rubro("9") { Nombre = "ELAB. MIXTOS", Productos = { "440", "522", "523", "524", 
                         "651", "652", "653", "698" } },
-            };
+            };*/
 
             // Calcular el total y diferencia para cada fila
             foreach (DataRow row in resultTable.Rows)
@@ -901,19 +914,27 @@ namespace Balanzas_MF
                 worksheet.PrinterSettings.PaperSize = (ePaperSize)Enum.Parse(typeof(ePaperSize), "A4");
 
                 // Guardar el archivo
-                string fileName = $"Reporte Balanzas {currentDate}.xlsx";
-                string filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), fileName);
-                FileInfo file = new FileInfo(filePath);
-                package.SaveAs(file);
-
-                // Abrir el archivo automáticamente
-                try
+                if (askReportLocation)
                 {
-                    System.Diagnostics.Process.Start(filePath);
+                    using (SaveFileDialog saveFileDialog = new SaveFileDialog())
+                    {
+                        saveFileDialog.Filter = "Archivos de Excel (*.xlsx)|*.xlsx";
+                        saveFileDialog.FileName = $"Reporte Balanzas {currentDate}.xlsx";
+                        if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                        {
+                            FileInfo file = new FileInfo(saveFileDialog.FileName);
+                            package.SaveAs(file);
+                            System.Diagnostics.Process.Start(file.FullName); // Abrir el archivo automáticamente
+                        }
+                    }
                 }
-                catch (System.ComponentModel.Win32Exception)
+                else
                 {
-                    MessageBox.Show("Error: No se pudo abrir el archivo.");
+                    string fileName = $"Reporte Balanzas {currentDate}.xlsx";
+                    string fullFilePath = Path.Combine(filePath, fileName);
+                    FileInfo file = new FileInfo(fullFilePath);
+                    package.SaveAs(file);
+                    System.Diagnostics.Process.Start(file.FullName); // Abrir el archivo automáticamente
                 }
             }
             catch (System.IO.IOException)
@@ -928,5 +949,87 @@ namespace Balanzas_MF
             }
         }
 
+        private void btn_settings_Click(object sender, EventArgs e)
+        {
+            FormConfig formConfig = new FormConfig(this);
+            formConfig.ShowDialog();
+        }
+
+        public void ReceiveConfigData(string path, bool checkbox, HashSet<int> excludedCategories, List<int> excludedProducts, DataTable categoriesTable)
+        {
+            filePath = path;
+            askReportLocation = checkbox;
+            excludedRubroCodes = excludedCategories;
+            codigosExcluidos = excludedProducts;
+            rubrosDataTable = categoriesTable;
+        }
+
+        private void ConfigurationLoad()
+        {
+            var generalSettings = ConfigurationManager.GetSection("GeneralSettings") as NameValueCollection;
+            // Cargar ruta de guardado del reporte
+            filePath = generalSettings["filepath"];
+            // Cargar opción de elegir ruta de guardado o usar la predefinida
+            askReportLocation = Convert.ToBoolean(generalSettings["askReportLocation"]);
+            // Cargar rubros excluidos
+            string textoConfigFile = generalSettings["excludedCategories"];
+            string[] numerosSeparados = textoConfigFile.Split(',');
+
+            foreach (string numeroTexto in numerosSeparados)
+            {
+                if (int.TryParse(numeroTexto.Trim(), out int numero))
+                {
+                    excludedRubroCodes.Add(numero);
+                }
+                else
+                {
+                    MessageBox.Show("Número no válido: " + numeroTexto, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            // Cargar productos excluidos
+            string textoConfigFile1 = generalSettings["excludedProducts"];
+            string[] numerosSeparados1 = textoConfigFile1.Split(',');
+
+            foreach (string numeroTexto1 in numerosSeparados1)
+            {
+                if (int.TryParse(numeroTexto1.Trim(), out int numero))
+                {
+                    codigosExcluidos.Add(numero);
+                }
+                else
+                {
+                    MessageBox.Show("Número no válido: " + numeroTexto1, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+
+            // Cargar tabla de productos y rubros
+            XmlDocument xmlDoc = new XmlDocument();
+            xmlDoc.Load(AppDomain.CurrentDomain.SetupInformation.ConfigurationFile);
+
+            var rubrosSection = xmlDoc.SelectSingleNode("//RubrosSection");
+            
+            if (rubrosSection != null)
+            {
+                rubrosDataTable.Columns.Add("rubro");
+                rubrosDataTable.Columns.Add("descripcion");
+                rubrosDataTable.Columns.Add("productos");
+
+                foreach (XmlNode rubroNode in rubrosSection.ChildNodes)
+                {
+                    if (rubroNode.Name == "Rubro" && rubroNode.Attributes != null)
+                    {
+                        var codigo = rubroNode.Attributes["codigo"].Value;
+                        var nombre = rubroNode.Attributes["nombre"].Value;
+
+                        List<string> productos = new List<string>();
+                        foreach (XmlNode productoNode in rubroNode.SelectNodes("productos/producto"))
+                        {
+                            productos.Add(productoNode.Attributes["codigo"].Value);
+                        }
+                        rubrosDataTable.Rows.Add(codigo, nombre, string.Join(", ", productos));
+                    }
+                }
+            }
+        }
     }
 }

@@ -51,6 +51,7 @@
             this.label_errors = new System.Windows.Forms.Label();
             this.label_diferencia = new System.Windows.Forms.Label();
             this.label_total = new System.Windows.Forms.Label();
+            this.btn_settings = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
@@ -72,7 +73,7 @@
             this.btn_load_sales.Location = new System.Drawing.Point(202, 88);
             this.btn_load_sales.Name = "btn_load_sales";
             this.btn_load_sales.Size = new System.Drawing.Size(127, 23);
-            this.btn_load_sales.TabIndex = 1;
+            this.btn_load_sales.TabIndex = 0;
             this.btn_load_sales.Text = "Cargar ventas UltraNet";
             this.btn_load_sales.UseVisualStyleBackColor = true;
             this.btn_load_sales.Click += new System.EventHandler(this.btn_load_sales_Click);
@@ -83,7 +84,7 @@
             this.btn_load_errors.Location = new System.Drawing.Point(483, 88);
             this.btn_load_errors.Name = "btn_load_errors";
             this.btn_load_errors.Size = new System.Drawing.Size(101, 23);
-            this.btn_load_errors.TabIndex = 2;
+            this.btn_load_errors.TabIndex = 1;
             this.btn_load_errors.Text = "Cargar errores";
             this.btn_load_errors.UseVisualStyleBackColor = true;
             this.btn_load_errors.Click += new System.EventHandler(this.btn_load_errors_Click);
@@ -163,7 +164,7 @@
             this.btn_load_bal5.Location = new System.Drawing.Point(476, 35);
             this.btn_load_bal5.Name = "btn_load_bal5";
             this.btn_load_bal5.Size = new System.Drawing.Size(75, 23);
-            this.btn_load_bal5.TabIndex = 4;
+            this.btn_load_bal5.TabIndex = 6;
             this.btn_load_bal5.Text = "Balanza 5";
             this.btn_load_bal5.UseVisualStyleBackColor = true;
             this.btn_load_bal5.Click += new System.EventHandler(this.btn_load_bal5_Click);
@@ -173,7 +174,7 @@
             this.btn_load_bal4.Location = new System.Drawing.Point(360, 35);
             this.btn_load_bal4.Name = "btn_load_bal4";
             this.btn_load_bal4.Size = new System.Drawing.Size(75, 23);
-            this.btn_load_bal4.TabIndex = 3;
+            this.btn_load_bal4.TabIndex = 5;
             this.btn_load_bal4.Text = "Balanza 4";
             this.btn_load_bal4.UseVisualStyleBackColor = true;
             this.btn_load_bal4.Click += new System.EventHandler(this.btn_load_bal4_Click);
@@ -183,7 +184,7 @@
             this.btn_load_bal3.Location = new System.Drawing.Point(244, 35);
             this.btn_load_bal3.Name = "btn_load_bal3";
             this.btn_load_bal3.Size = new System.Drawing.Size(75, 23);
-            this.btn_load_bal3.TabIndex = 2;
+            this.btn_load_bal3.TabIndex = 4;
             this.btn_load_bal3.Text = "Balanza 3";
             this.btn_load_bal3.UseVisualStyleBackColor = true;
             this.btn_load_bal3.Click += new System.EventHandler(this.btn_load_bal3_Click);
@@ -193,7 +194,7 @@
             this.btn_load_bal2.Location = new System.Drawing.Point(125, 35);
             this.btn_load_bal2.Name = "btn_load_bal2";
             this.btn_load_bal2.Size = new System.Drawing.Size(75, 23);
-            this.btn_load_bal2.TabIndex = 1;
+            this.btn_load_bal2.TabIndex = 3;
             this.btn_load_bal2.Text = "Balanza 2";
             this.btn_load_bal2.UseVisualStyleBackColor = true;
             this.btn_load_bal2.Click += new System.EventHandler(this.btn_load_bal2_Click);
@@ -203,7 +204,7 @@
             this.btn_load_bal1.Location = new System.Drawing.Point(7, 35);
             this.btn_load_bal1.Name = "btn_load_bal1";
             this.btn_load_bal1.Size = new System.Drawing.Size(75, 23);
-            this.btn_load_bal1.TabIndex = 0;
+            this.btn_load_bal1.TabIndex = 2;
             this.btn_load_bal1.Text = "Balanza 1";
             this.btn_load_bal1.UseVisualStyleBackColor = true;
             this.btn_load_bal1.Click += new System.EventHandler(this.btn_load_bal1_Click);
@@ -218,7 +219,7 @@
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
             this.dataGridView1.Size = new System.Drawing.Size(556, 164);
-            this.dataGridView1.TabIndex = 4;
+            this.dataGridView1.TabIndex = 8;
             // 
             // btn_process_data
             // 
@@ -227,7 +228,7 @@
             this.btn_process_data.Location = new System.Drawing.Point(358, 279);
             this.btn_process_data.Name = "btn_process_data";
             this.btn_process_data.Size = new System.Drawing.Size(75, 23);
-            this.btn_process_data.TabIndex = 5;
+            this.btn_process_data.TabIndex = 7;
             this.btn_process_data.Text = "Procesar";
             this.btn_process_data.UseVisualStyleBackColor = true;
             this.btn_process_data.Click += new System.EventHandler(this.btn_process_data_Click);
@@ -238,7 +239,7 @@
             this.btn_clean_fields.Location = new System.Drawing.Point(239, 550);
             this.btn_clean_fields.Name = "btn_clean_fields";
             this.btn_clean_fields.Size = new System.Drawing.Size(90, 23);
-            this.btn_clean_fields.TabIndex = 6;
+            this.btn_clean_fields.TabIndex = 9;
             this.btn_clean_fields.Text = "Limpiar campos";
             this.btn_clean_fields.UseVisualStyleBackColor = true;
             this.btn_clean_fields.Click += new System.EventHandler(this.btn_clean_fields_Click);
@@ -249,7 +250,7 @@
             this.btn_print_report.Location = new System.Drawing.Point(464, 550);
             this.btn_print_report.Name = "btn_print_report";
             this.btn_print_report.Size = new System.Drawing.Size(93, 23);
-            this.btn_print_report.TabIndex = 7;
+            this.btn_print_report.TabIndex = 10;
             this.btn_print_report.Text = "Generar reporte";
             this.btn_print_report.UseVisualStyleBackColor = true;
             this.btn_print_report.Click += new System.EventHandler(this.btn_print_report_Click);
@@ -298,12 +299,23 @@
             this.label_total.TabIndex = 11;
             this.label_total.Text = "$ 100000";
             // 
+            // btn_settings
+            // 
+            this.btn_settings.Image = global::Balanzas_MF.Properties.Resources._3592841_cog_gear_general_machine_office_setting_settings_107765;
+            this.btn_settings.Location = new System.Drawing.Point(733, 12);
+            this.btn_settings.Name = "btn_settings";
+            this.btn_settings.Size = new System.Drawing.Size(38, 40);
+            this.btn_settings.TabIndex = 11;
+            this.btn_settings.UseVisualStyleBackColor = true;
+            this.btn_settings.Click += new System.EventHandler(this.btn_settings_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.ClientSize = new System.Drawing.Size(783, 616);
+            this.Controls.Add(this.btn_settings);
             this.Controls.Add(this.label_total);
             this.Controls.Add(this.label_diferencia);
             this.Controls.Add(this.label_errors);
@@ -354,6 +366,7 @@
         private System.Windows.Forms.Label label_errors;
         private System.Windows.Forms.Label label_diferencia;
         private System.Windows.Forms.Label label_total;
+        private System.Windows.Forms.Button btn_settings;
     }
 }
 

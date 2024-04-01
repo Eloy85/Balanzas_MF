@@ -61,12 +61,32 @@ namespace Balanzas_MF.Properties {
         }
         
         /// <summary>
+        ///   Busca un recurso adaptado de tipo System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap _3592841_cog_gear_general_machine_office_setting_settings_107765 {
+            get {
+                object obj = ResourceManager.GetObject("3592841-cog-gear-general-machine-office-setting-settings_107765", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Busca un recurso adaptado de tipo System.Drawing.Icon similar a (Icono).
         /// </summary>
         internal static System.Drawing.Icon balanza {
             get {
                 object obj = ResourceManager.GetObject("balanza", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Busca un recurso adaptado de tipo System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap cog_gear_settings {
+            get {
+                object obj = ResourceManager.GetObject("cog-gear-settings", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
     }
